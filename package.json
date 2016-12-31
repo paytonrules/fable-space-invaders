@@ -1,0 +1,23 @@
+{
+  "name": "fsharp-space-invaders",
+  "description": "FSharp port of space invaders, using Fable.",
+  "version": "0.0.1-SNAPSHOT",
+  "repository": "https://github.com/paytonrules/fable-space-invaders.git",
+  "main": "./dist/umd/Main.js",
+  "devDependencies": {
+    "browser-sync": "^2.18.5",
+    "fable-compiler": "^0.7.7",
+    "fable-core": "^0.7.6",
+    "fable-plugins-nunit": "^0.7.1",
+    "fable-powerpack": "^0.0.18",
+    "mocha": "^3.1.2"
+  },
+  "license": "MIT",
+  "scripts": {
+    "prepublish": "npm run build",
+    "build": "fable --target umd",
+    "watch": "fable --target umd --watch",
+    "start": "browser-sync start --server 'dist' --files \"dist/index.html, dist/umd/*.js\"",
+    "test": "fable --target test"
+  }
+}
