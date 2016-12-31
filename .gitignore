@@ -1,0 +1,18 @@
+/dist/test/
+/dist/umd/
+/node_modules/
+
+/npm-debug.log
+/yarn-error.log
+
+### XamarinStudio ###
+bin/
+obj/
+*.userprefs
+
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
