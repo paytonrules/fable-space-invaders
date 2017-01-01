@@ -69,6 +69,8 @@ that it automatically reruns the unit tests whenever you make any changes to you
 project's files. This is much faster than using
 [`yarn test`](https://yarnpkg.com/en/docs/cli/test)
 
+This will also build the main app, so you really don't need to run watch on the tests and the app simultaneously.
+
 Viewing The Game
 =========================================
 
@@ -78,14 +80,11 @@ To get live feedback you can run `yarn start` which opens a browser-sync session
 is built. This does lead to a midly annoying workflow:
 
 * Open termnal.
-* Run yarn run watch.
-* Open another termanl.
 * Run yarn test -- --watch.
-* Open yet another terminal.
+* Open another terminal.
 * Run yarn start.
 
-It works, but I'd like to get a nicer setup. Not very different than my running of lein figwheel, and having two browser
-windows I suppose. 
+This will run tests in the command prompt, and auto-update the browser window.
 
 Making changes
 ===================================
