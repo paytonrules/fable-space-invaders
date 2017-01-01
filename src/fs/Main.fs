@@ -1,11 +1,11 @@
-module App.Main
+module SpaceInvaders.Main
 
-open Fable.Import
-open App.Message
 
-let main () =
-    Browser.console.log "I work yadoof   putz"
-    Browser.console.log message
+open SpaceInvaders.Window
+
+let main() =
+    let renderFunc = createRenderer
+    ()
 
 do
     main ()
