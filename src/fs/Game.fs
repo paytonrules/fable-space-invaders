@@ -1,8 +1,6 @@
-module App.Message
+module SpaceInvaders.Game
 
 open Fable.Core.JsInterop
-
-type ImageData = string // validation?
 
 type Bounds = 
     {
@@ -18,7 +16,7 @@ type Vector2 =
 
 type Position = Vector2
 type Velocity = Vector2
-type CharacterName = Invader | Laser | Bullet
+type CharacterName = LargeInvader | MediumInvader | SmallInvader | Laser | Bullet
 type State = Open | Closed
 
 type Character = 
@@ -28,8 +26,6 @@ type Character =
 
 type MultiStateCharacter = Character * State
 
-let a = ({Name = Invader}, Open)
-
 type Entity = 
     {
     Character: Character;
@@ -38,13 +34,12 @@ type Entity =
     Velocity: Velocity option;        
     }
 
-type Update = Entity -> unit
-let update (entity:Entity) = () 
-
 type Game =
     {
     Bullet: Entity option;
     Invaders: Entity list;
+    Laser: Entity;
     }
-
-let message = importMember<string> "../js/Message.js"
+let shoot (position:Position) (game:Game) = game
+let move (direction:Vector2) (game:Game) = game
+let update (game:Game) = game
