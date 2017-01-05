@@ -2,7 +2,7 @@
   "sourceMaps": true,
   "targets": {
     "umd": {
-      "projFile": "./Main.fsproj",
+      "projFile": "./src/Main.fsproj",
       "rollup": {
         "dest": "./dist/umd/Main.js",
         "format": "umd"
@@ -10,7 +10,7 @@
     },
     "test": {
       "projFile": [
-        "./Main.fsproj",
+        "./src/Main.fsproj",
         "./test/Test.fsproj"
       ],
       "outDir": "./dist/test",
@@ -18,7 +18,7 @@
       "coreLib": "fable-core/umd",
       "plugins": ["./node_modules/fable-plugins-nunit/Fable.Plugins.NUnit.dll"],
       "scripts": {
-        "postbuild": "mocha --reporter min --colors --sort --recursive ./dist/test/test/fs"
+        "postbuild": "mocha --reporter spec --colors --sort --recursive ./dist/test/test/fs"
       }
     }
   }
