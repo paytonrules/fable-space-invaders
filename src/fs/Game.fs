@@ -1,7 +1,5 @@
 module SpaceInvaders.Game
 
-open Fable.Core.JsInterop
-
 type Bounds = 
     {
     Width: int;
