@@ -16,3 +16,7 @@ obj/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+## .paket
+.paket/paket.exe
+packages/
