@@ -27,6 +27,7 @@
     <Compile Include="Util.fs" />
     <Compile Include="fs/GameLoop.fs" />
     <Compile Include="fs/Game.fs" />
+    <Compile Include="fs/Presentation.fs" />
   </ItemGroup>
   <!-- DO NOT EDIT BELOW THIS POINT UNLESS YOU KNOW WHAT YOU'RE DOING -->
   <PropertyGroup>

@@ -23,6 +23,7 @@
   <ItemGroup>
     <Compile Include="fs/Constraints.fs" />
     <Compile Include="fs/Game.fs" />
+    <Compile Include="fs/Image.fs" />
     <Compile Include="fs/Window.fs" />
     <Compile Include="fs/Presentation.fs" />
     <Compile Include="fs/GameLoop.fs" />
