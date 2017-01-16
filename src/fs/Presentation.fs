@@ -27,25 +27,18 @@ let presenter (renderer:(list<Image<'HTMLImage>> -> unit)) (lookupTable:Map<Imag
     let someEntityToImage (entity:Entity option) image =
         entity |> Option.map (fun e -> entityToImage e image)
 
-    let laserImage =
-        Some(game.Laser)
-        |> Option.map (function | SpaceInvaders.Game.Laser e -> e)
+    let lookupImage someEntity destructor keyLookup =
+        someEntity 
+        |> Option.map destructor
         |> someEntityToImage
-        |> Option.bind <| Map.tryFind Laser lookupTable
+        |> Option.bind <| Map.tryFind keyLookup lookupTable
 
-    let bulletImage = 
-        game.Bullet
-        |> Option.map (function | SpaceInvaders.Game.Bullet e -> e)
-        |> someEntityToImage
-        |> Option.bind <| Map.tryFind Bullet lookupTable
-
+    let laserImage = lookupImage (Some(game.Laser)) (function | SpaceInvaders.Game.Laser e -> e) Laser
+    let bulletImage = lookupImage game.Bullet (function | SpaceInvaders.Game.Bullet e -> e) Bullet
     let invaderImages = 
         game.Invaders
-        |> List.map (fun invader -> 
-                        Some(invader)
-                        |> Option.map (function | SpaceInvaders.Game.Invader e -> e)
-                        |> Option.map fst
-                        |> someEntityToImage
-                        |> Option.bind <| Map.tryFind LargeInvaderOpen lookupTable)
+        |> List.map (fun i -> lookupImage (Some(i))
+                                          (function | SpaceInvaders.Game.Invader e -> fst e) 
+                                          LargeInvaderOpen)
 
     invaderImages @ [laserImage; bulletImage] |> List.choose id |> renderer
