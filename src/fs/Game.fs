@@ -45,15 +45,22 @@ type Game = {
     Entities: Entities
 }
 
+let initialInvaders = [
+    { Entity = { Position = {X = 3.; Y = 20.}
+                 Bounds = { Width = 30; Height = 30 }
+                 Velocity = None}
+      InvaderState = Closed
+      Type = Small} |> Invader]
+
 let initialGame =
     {
         Entities = [
             { LaserProperties.Entity = {
-                Position = {X = 105.; Y = 216.};
+                Position = {X = 105.; Y = 216.}
                 Bounds = { Width = 20; Height = 30}
                 Velocity = None
             }} |> Laser
-        ]
+        ] @ initialInvaders
     }
 let shoot (position:Position) (game:Game) = game
 let move (direction:Vector2) (game:Game) = game

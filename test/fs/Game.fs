@@ -8,4 +8,6 @@ open SpaceInvaders.Game
 module Game =
     [<Test>]
     let ``it puts the first invader at 3. 20.`` () =
-        ignore
+        let (Invader firstInvader) = List.head initialInvaders
+
+        equal firstInvader.Entity.Position {X = 3.; Y = 20.} 
