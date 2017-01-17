@@ -27,76 +27,103 @@ module Presentation =
     let setup () = 
         renderedImages <- []
 
-    let defaultLaser =  {Position = {X = 10.; Y = 20.}; 
-                        Bounds = {Width = 0; Height = 0};
-                        Velocity = None}
-
     [<Test>]
     let ``it draws the laser where it is`` () =
-        let game = {
-            Laser = defaultLaser |> Laser;
-            Bullet = None;
-            Invaders = []
+        let laser =  {Position = {X = 10.; Y = 20.}; 
+                      Bounds = {Width = 0; Height = 0};
+                      Velocity = None}
+        let game = { 
+            Entities = [ { Entity = laser } |> Laser ]
         }
 
         presenter' game |> ignore
 
         let laserImage = renderedImages |> List.find (fun x -> x.Image = "laser")
-        equal defaultLaser.Position.X laserImage.Position.X
-        equal defaultLaser.Position.Y laserImage.Position.Y
+        equal laserImage.Position {X = 10.; Y = 20.}
 
     [<Test>]
-    let ``it doesn't draw the bullet when there isn't one`` () =
-        let game = {
-            Laser = defaultLaser |> Laser;
-            Bullet = None;
-            Invaders = []
+    let ``it draws the bullet at its position when present`` () =
+        let bullet =  {Position = {X = 30.; Y = 40.}; 
+                       Bounds = {Width = 0; Height = 0};
+                       Velocity = None}
+        let game = { 
+            Entities = [ { BulletProperties.Entity = bullet } |> Bullet ]
         }
 
         presenter' game |> ignore
 
-        let bulletImage = renderedImages |> List.tryFind (fun x -> x.Image = "bullet")
-        equal None bulletImage
+        let bulletImage = renderedImages |> List.find (fun x -> x.Image = "bullet")
+        equal bulletImage.Position {X = 30.; Y = 40.}   
 
     [<Test>]
-    let ``it does draw the bullet at its position when present`` () =
-        let bullet = {
-            Position = {X = 5.; Y = 7.};
-            Bounds = {Width = 0; Height = 0};
-            Velocity = None
-        }
-        let game = {
-            Laser = defaultLaser |> Laser;
-            Bullet = Some(bullet |> Bullet);
-            Invaders = []
-        }
-
-        presenter' game |> ignore
-
-        let bulletImage = renderedImages |> List.tryFind (fun x -> x.Image = "bullet")
-        match bulletImage with
-        | None -> failwith "The bullet should have been drawn"
-        | Some(drawnBullet) -> equal drawnBullet.Position {X = 5.; Y = 7.}   
-
-    [<Test>]
-    let ``it will draw a large invader, open`` () =
+    let ``it will draw the invader types`` () =
+        let invaderTypes = [(Large, Open, "largeInvaderOpen"); 
+                            (Large, Closed, "largeInvaderClosed"); 
+                            (Medium, Open, "mediumInvaderOpen");
+                            (Medium, Closed, "mediumInvaderClosed");
+                            (Small, Open, "smallInvaderOpen");
+                            (Small, Closed, "smallInvaderClosed")]
         let entity = {
             Position = {X = 7.; Y = 1.};
             Bounds = {Width = 0; Height = 0};
             Velocity = None
         }
-        let state = Open
-        let invader = (entity, state)
+
+        // This is the function that validates every image in the the table above
+        let validateImageRendered (invaderType, state, expectedImage) =
+            let invader = { 
+                Entity = entity; 
+                InvaderState = state; 
+                Type = invaderType } |> Invader
+
+            let game = {
+                Entities = [ invader ]
+            }
+
+            presenter' game |> ignore
+
+            let image = renderedImages |> List.find (fun x -> x.Image = expectedImage)
+
+            equal image.Position {X = 7.; Y = 1.}
+
+
+        // Loop through all entries above and check for presence
+        invaderTypes |> List.iter validateImageRendered
+
+    [<Test>]
+    let ``it will draw a large invader, closed`` () =
+        let largeInvader = {
+            Position = {X = 7.; Y = 1.};
+            Bounds = {Width = 0; Height = 0};
+            Velocity = None
+        }
+        let invader = { Entity = largeInvader; InvaderState = Closed; Type = Large } |> Invader
         let game = {
-            Laser = defaultLaser |> Laser;
-            Bullet = None;
-            Invaders = [invader |> Invader]
+            Entities = [ invader ]
         }
 
         presenter' game |> ignore
 
         let invaderImage = renderedImages 
-                           |> List.find (fun x -> x.Image = "largeInvaderOpen")
- 
-        equal entity.Position.X invaderImage.Position.X
-        equal entity.Position.Y invaderImage.Position.Y
+                           |> List.find (fun x -> x.Image = "largeInvaderClosed")
+
+        equal invaderImage.Position {X = 7.; Y = 1.}
+
+    [<Test>]
+    let ``it will draw a medium invader, open`` () =
+        let mediumInvader = {
+            Position = {X = 7.; Y = 1.};
+            Bounds = {Width = 0; Height = 0};
+            Velocity = None
+        }
+        let invader = { Entity = mediumInvader; InvaderState = Open; Type = Medium } |> Invader
+        let game = {
+            Entities = [ invader ]
+        }
+
+        presenter' game |> ignore
+
+        let invaderImage = renderedImages 
+                           |> List.find (fun x -> x.Image = "mediumInvaderOpen")
+
+        equal invaderImage.Position {X = 7.; Y = 1.}

@@ -19,26 +19,34 @@ type Image =
 type EmailAddress = EmailAddress of string
 
 let presenter (renderer:(list<Image<'HTMLImage>> -> unit)) (lookupTable:Map<Image, 'HTMLImage>) (game:Game) = 
-    let entityToImage (entity: Entity) image = 
-        { Image = image;
-          Position = { X = entity.Position.X;
-                       Y = entity.Position.Y;}}
+    let lookupImageKey = function
+    | EntityType.Laser _ -> Laser
+    | EntityType.Bullet _ -> Bullet
+    | EntityType.Invader e -> match (e.Type, e.InvaderState) with 
+                              | Large, Open -> LargeInvaderOpen
+                              | Large, Closed ->  LargeInvaderClosed
+                              | Medium, Open -> MediumInvaderOpen
+                              | Medium, Closed -> MediumInvaderClosed
+                              | Small, Open -> SmallInvaderOpen
+                              | Small, Closed -> SmallInvaderClosed
 
-    let someEntityToImage (entity:Entity option) image =
-        entity |> Option.map (fun e -> entityToImage e image)
+    let lookupImage imageKey = Map.tryFind imageKey lookupTable
 
-    let lookupImage someEntity destructor keyLookup =
-        someEntity 
-        |> Option.map destructor
-        |> someEntityToImage
-        |> Option.bind <| Map.tryFind keyLookup lookupTable
+    let positionEntity image (entity:Entity) = 
+        {Image = image; 
+         Position = {X = entity.Position.X; 
+                     Y = entity.Position.Y}}
 
-    let laserImage = lookupImage (Some(game.Laser)) (function | SpaceInvaders.Game.Laser e -> e) Laser
-    let bulletImage = lookupImage game.Bullet (function | SpaceInvaders.Game.Bullet e -> e) Bullet
-    let invaderImages = 
-        game.Invaders
-        |> List.map (fun i -> lookupImage (Some(i))
-                                          (function | SpaceInvaders.Game.Invader e -> fst e) 
-                                          LargeInvaderOpen)
+    let positionImage image entity =
+        match entity with 
+        | EntityType.Laser e -> positionEntity image e.Entity
+        | EntityType.Bullet e -> positionEntity image e.Entity
+        | EntityType.Invader e -> positionEntity image e.Entity
 
-    invaderImages @ [laserImage; bulletImage] |> List.choose id |> renderer
+    let imagesToDraw = game.Entities
+                       |> List.map (fun entity ->
+                                        lookupImageKey entity
+                                        |> lookupImage 
+                                        |> Option.map (fun img -> positionImage img entity))
+
+    imagesToDraw |> List.choose id |> renderer

@@ -1,9 +1,11 @@
 namespace Test
 
 open Fable.Core.Testing
+open SpaceInvaders.Game
+
 
 [<TestFixture>]
-module Message =
+module Game =
     [<Test>]
-    let ``a thing be great`` () =
-        equal 1 1
+    let ``it puts the first invader at 3. 20.`` () =
+        ignore
