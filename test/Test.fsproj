@@ -25,6 +25,7 @@
    !-->
   <ItemGroup>
     <Compile Include="Util.fs" />
+    <Compile Include="fs/EventMapping.fs" />
     <Compile Include="fs/GameLoop.fs" />
     <Compile Include="fs/Game.fs" />
     <Compile Include="fs/Presentation.fs" />

@@ -2,20 +2,18 @@ module SpaceInvaders.GameLoop
 open System
 
 type Delta = float
-type KeyCode = int
-type KeyDown = 
-    {
-        key: KeyCode
-    }
+// Key stuff is a little browser specific. Maybe this should be in Window? Although then gameLoop depends on window...
+type KeyCode = float
 
-type KeyUp = 
+type KeyboardEvent = 
     {
         key: KeyCode
     }
 
 type Event =
     | Tick of Delta
-    | KeyDown of KeyDown
+    | KeyDown of KeyboardEvent
+    | KeyUp of KeyboardEvent
 
 type Update<'Game> = 'Game -> Event -> 'Game
 type Render<'Game> = 'Game -> unit

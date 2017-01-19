@@ -4,9 +4,11 @@ open System
 open SpaceInvaders.Window
 open SpaceInvaders.GameLoop
 open SpaceInvaders.Presentation
+open SpaceInvaders.EventMapping
 open SpaceInvaders.Game
-open Fable.Import
 open Fable.Core
+open Fable.Import
+open Fable.Import.Browser
 
 let bullet = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAYAAABP2FU6AAAAAXNSR0IArs4c6QAAABJJREFUCB1jYPjJ8J+JAQgQBAAhwgH/34iA1wAAAABJRU5ErkJggg=="
 let laser = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAICAYAAAAiJnXPAAAAAXNSR0IArs4c6QAAADVJREFUGBljYMAFfjL8xyXFiFUCWQM7A4YaJqyaCAhCTEE2mYAGBqDNjAykaIAaSJbz6KcJAG27B/w+8iEEAAAAAElFTkSuQmCC"
@@ -25,14 +27,22 @@ let images = [
     SmallInvaderOpen, createImage smallOpenInvader;
     SmallInvaderClosed, createImage smallClosedInvader;
     LargeInvaderOpen, createImage largeOpenInvader;
-    Image.Bullet, createImage bullet;
-    Image.Laser, createImage laser;] |> Map
+    Presentation.Image.Bullet, createImage bullet;
+    Presentation.Image.Laser, createImage laser;] |> Map
 
 let main() =
     let renderFunc = presenter createRenderer images
-    let updateFunc game event = game
 
-    let eventHandler = createGameEventHandler updateFunc initialGame
+    let eventHandler = createGameEventHandler (mapEvents update) initialGame
+
+    document.addEventListener_keydown(fun e -> 
+        eventHandler ({key = e.keyCode } |> KeyDown) |> ignore
+        null)
+
+    document.addEventListener_keydown(fun e -> 
+        eventHandler ({key = e.keyCode } |> KeyUp) |> ignore
+        null)
+
     do start Browser.window.requestAnimationFrame eventHandler renderFunc (Browser.performance.now()) |> ignore
 
 do

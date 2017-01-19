@@ -27,6 +27,7 @@
     <Compile Include="fs/Window.fs" />
     <Compile Include="fs/Presentation.fs" />
     <Compile Include="fs/GameLoop.fs" />
+    <Compile Include="fs/EventMapping.fs" />
     <Compile Include="fs/Main.fs" />
   </ItemGroup>
   <!-- DO NOT EDIT BELOW THIS POINT UNLESS YOU KNOW WHAT YOU'RE DOING -->

@@ -45,6 +45,12 @@ type Game = {
     Entities: Entities
 }
 
+type Event = 
+| MoveLeft
+| MoveRight
+| Update
+| Shoot
+
 let initialInvaders = [
     { Entity = { Position = {X = 3.; Y = 20.}
                  Bounds = { Width = 30; Height = 30 }
@@ -64,4 +70,4 @@ let initialGame =
     }
 let shoot (position:Position) (game:Game) = game
 let move (direction:Vector2) (game:Game) = game
-let update (game:Game) = game
+let update (game:Game) (event:Event) = game
