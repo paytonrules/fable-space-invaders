@@ -33,7 +33,7 @@ module Presentation =
                       Bounds = {Width = 0; Height = 0};
                       Velocity = None}
         let game = { 
-            Entities = [ { Entity = laser } |> Laser ]
+            Entities = [ { Entity = laser; RightForce = false; LeftForce = false } |> Laser ]
         }
 
         presenter' game |> ignore

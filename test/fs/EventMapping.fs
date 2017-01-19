@@ -70,3 +70,28 @@ module EventMapping =
 
         List.isEmpty events |> equal true
         equal initialGame updatedGame
+
+    [<Test>]
+    let ``map keyup LeftArrow to StopMoveLeft event`` () =
+        let mapper = mapEvents updateFunc
+
+        mapper 1 ({key = KeyCodes.LeftArrow |> float } |> KeyUp) |> ignore
+
+        equal true (events = [ StopMoveLeft ])
+
+    [<Test>]
+    let ``map keyup RightArrow to StopMoveRight event`` () =
+        let mapper = mapEvents updateFunc
+
+        mapper 1 ({key = KeyCodes.RightArrow |> float } |> KeyUp) |> ignore
+
+        equal true (events = [ StopMoveRight ])
+
+    [<Test>]
+    let ``map keyup Spacebar to ...nothing`` () =
+        let mapper = mapEvents updateFunc
+
+        mapper 1 ({key = KeyCodes.Spacebar |> float } |> KeyUp) |> ignore
+
+        List.isEmpty events |> equal true
+
