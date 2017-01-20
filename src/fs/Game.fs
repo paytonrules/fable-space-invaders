@@ -74,10 +74,6 @@ let initialGame = {
     Entities = [ (Laser initialLaser) ] @ initialInvaders
 }
 
-let findLaser entities =
-    entities 
-    |> List.find (function Laser _ -> true | _ -> false)
-
 let pushLaser entities update = 
     entities
     |> List.map (function 

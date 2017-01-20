@@ -14,6 +14,11 @@ module InitialInvaderPositioning =
 
 [<TestFixture>]
 module MovingLaser =
+    let findLaser entities =
+        entities 
+        |> List.tryPick  (function Laser e -> Some e | _ -> None)
+        |> function Some laser -> laser | None -> failwith "laser not found"
+
     let defaultEntity = {
         Position = {X = 0.; Y = 1.}
         Velocity = None
@@ -33,8 +38,7 @@ module MovingLaser =
         }
 
         let updatedGame = update game MoveLeft
-        let (Laser newLaser) = List.head updatedGame.Entities
-
+        let newLaser = findLaser updatedGame.Entities
         equal true newLaser.LeftForce
 
     [<Test>]
@@ -44,8 +48,7 @@ module MovingLaser =
         }
 
         let updatedGame = update game MoveRight
-        let (Laser newLaser) = List.head updatedGame.Entities
-
+        let newLaser = findLaser updatedGame.Entities
         equal true newLaser.RightForce
 
     [<Test>]
@@ -60,8 +63,7 @@ module MovingLaser =
         }
 
         let updatedGame = update game StopMoveRight
-        let (Laser newLaser) = List.head updatedGame.Entities
-
+        let newLaser = findLaser updatedGame.Entities
         equal false newLaser.RightForce
 
     [<Test>]
@@ -76,12 +78,17 @@ module MovingLaser =
         }
 
         let updatedGame = update game StopMoveLeft
-        let (Laser newLaser) = findLaser updatedGame.Entities
-
+        let newLaser = findLaser updatedGame.Entities
         equal false newLaser.LeftForce
 
 [<TestFixture>]
 module UpdatingLaser =
+
+    let findLaser entities =
+        entities 
+        |> List.tryPick  (function Laser e -> Some e | _ -> None)
+        |> function Some laser -> laser | None -> failwith "laser not found"
+
     let defaultEntity = {
         Position = {X = 0.; Y = 1.}
         Velocity = None
@@ -99,8 +106,7 @@ module UpdatingLaser =
             Entities = [laser]
         }
 
-        update game Update
+        let updatedGame = update game Update
 
-        let (Laser laser) = findLaser game.Entities
-
-        equal laser.Entity.Position defaultEntity.Position
+        let newLaser = findLaser updatedGame.Entities
+        equal newLaser.Entity.Position defaultEntity.Position
