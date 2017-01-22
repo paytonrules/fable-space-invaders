@@ -126,3 +126,21 @@ module UpdatingLaser =
 
         let newLaser = findLaser updatedGame.Entities
         equal newLaser.Entity.Position.X (defaultEntity.Position.X + speedPerMillisecond)
+
+    [<Test>]
+    let ``account for delta when moving the laser`` () =
+        let laser = {
+            LaserProperties.Entity = defaultEntity;
+            LeftForce = false;
+            RightForce = true; } |> Laser
+
+        let game = {
+            Entities = [laser]
+        }
+
+        let updateEvent = Event.Update 2.
+        let updatedGame = update game updateEvent
+
+        let newLaser = findLaser updatedGame.Entities
+        equal newLaser.Entity.Position.X (defaultEntity.Position.X + (2. * speedPerMillisecond))
+

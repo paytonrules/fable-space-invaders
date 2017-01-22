@@ -90,7 +90,7 @@ let stopPushingLaserLeft entities = pushLaser entities (fun e -> {e with LeftFor
 let updateLaser laserProperties delta = 
     let newPosition = {laserProperties.Entity.Position with 
                         X = if laserProperties.RightForce 
-                            then laserProperties.Entity.Position.X + (speedPerMillisecond * 50.)
+                            then laserProperties.Entity.Position.X + (speedPerMillisecond * delta)
                             else laserProperties.Entity.Position.X}
                     
     { laserProperties with Entity =
