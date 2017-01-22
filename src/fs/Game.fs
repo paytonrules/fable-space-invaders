@@ -89,10 +89,14 @@ let stopPushingLaserRight entities = pushLaser entities (fun e -> {e with RightF
 let stopPushingLaserLeft entities = pushLaser entities (fun e -> {e with LeftForce = false })
 
 let updateLaser laserProperties delta = 
+    let direction = if laserProperties.RightForce && laserProperties.LeftForce then 0.
+                    else if laserProperties.LeftForce then -1.
+                    else if laserProperties.RightForce then 1.
+                    else 0.
+
+    let xMove = direction * speedPerMillisecond * delta
     let newPosition = {laserProperties.Entity.Position with 
-                        X = if laserProperties.RightForce 
-                            then laserProperties.Entity.Position.X + (speedPerMillisecond * delta)
-                            else laserProperties.Entity.Position.X}
+                        X = laserProperties.Entity.Position.X + xMove }
                     
     { laserProperties with Entity =
                            { laserProperties.Entity with Position = newPosition } }
@@ -103,10 +107,13 @@ let updateEntities game delta =
                                                      | Invader e -> e |> Invader
                                                      | Bullet e -> e |> Bullet)}
 
+let updateGame game timeSinceGameStarted = 
+    let newGame = updateEntities game (timeSinceGameStarted - game.LastUpdate)
+    {newGame with LastUpdate = timeSinceGameStarted}
 let update (game:Game) (event:Event) = 
     match event with 
     | MoveLeft -> { game with Entities = pushLaserLeft game.Entities }
     | MoveRight -> { game with Entities = pushLaserRight game.Entities }
     | StopMoveRight -> { game with Entities = stopPushingLaserRight game.Entities }
     | StopMoveLeft -> { game with Entities = stopPushingLaserLeft game.Entities }
-    | Update delta -> updateEntities game delta
+    | Update timeSinceGameStarted -> updateGame game timeSinceGameStarted

@@ -122,11 +122,51 @@ module UpdatingLaser =
             LeftForce = false;
             RightForce = true; } |> Laser
 
-        let game = { Entities = [laser]; LastUpdate = 0.}
+        let game = { Entities = [laser]; LastUpdate = 1.}
 
-        let updateEvent = Event.Update 2.
+        let updateEvent = Event.Update 3.
         let updatedGame = update game updateEvent
 
         let newLaser = findLaser updatedGame.Entities
         equal newLaser.Entity.Position.X (defaultEntity.Position.X + (2. * speedPerMillisecond))
 
+    [<Test>]
+    let ``update a laser with left force, move to the left`` () = 
+        let laser = {
+            LaserProperties.Entity = defaultEntity;
+            LeftForce = true;
+            RightForce = false; } |> Laser
+
+        let game = { Entities = [laser]; LastUpdate = 1.}
+
+        let updateEvent = Event.Update 3.
+        let updatedGame = update game updateEvent
+
+        let newLaser = findLaser updatedGame.Entities
+        equal newLaser.Entity.Position.X (defaultEntity.Position.X - (2. * speedPerMillisecond))
+
+    [<Test>]
+    let ``update a laser with both forces, go nowhere`` () = 
+        let laser = {
+            LaserProperties.Entity = defaultEntity;
+            LeftForce = true;
+            RightForce = true; } |> Laser
+
+        let game = { Entities = [laser]; LastUpdate = 1.}
+
+        let updateEvent = Event.Update 3.
+        let updatedGame = update game updateEvent
+
+        let newLaser = findLaser updatedGame.Entities
+        equal newLaser.Entity.Position.X defaultEntity.Position.X
+
+[<TestFixture>]
+module UpdateFunc = 
+    [<Test>]
+    let ``update the timestamp on each update`` () =
+        let game = { Entities = []; LastUpdate = 2.}
+        let updateEvent = Event.Update 3.
+
+        let newGame = update game updateEvent
+
+        equal newGame.LastUpdate 3.
