@@ -21,6 +21,7 @@
    !  File order is important in F#. Files cannot depend on anything below them.
    !-->
   <ItemGroup>
+    <Compile Include="../node_modules/fable-aether/Aether.fs" />
     <Compile Include="fs/Constraints.fs" />
     <Compile Include="fs/Game.fs" />
     <Compile Include="fs/Image.fs" />

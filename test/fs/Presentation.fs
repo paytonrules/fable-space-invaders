@@ -30,8 +30,8 @@ module Presentation =
     [<Test>]
     let ``it draws the laser where it is`` () =
         let laser =  {Position = {X = 10.; Y = 20.}; 
-                      Bounds = {Width = 0; Height = 0};
-                      Velocity = None}
+                      Bounds = {Width = 0; Height = 0};}
+
         let game = { 
             Entities = [ { Entity = laser; RightForce = false; LeftForce = false } |> Laser ]
         }
@@ -44,10 +44,10 @@ module Presentation =
     [<Test>]
     let ``it draws the bullet at its position when present`` () =
         let bullet =  {Position = {X = 30.; Y = 40.}; 
-                       Bounds = {Width = 0; Height = 0};
-                       Velocity = None}
+                       Bounds = {Width = 0; Height = 0};}
+
         let game = { 
-            Entities = [ { BulletProperties.Entity = bullet } |> Bullet ]
+            Entities = [ { BulletProperties.Entity = bullet; Velocity = {X = 0.; Y = 0.} } |> Bullet ]
         }
 
         presenter' game |> ignore
@@ -66,7 +66,6 @@ module Presentation =
         let entity = {
             Position = {X = 7.; Y = 1.};
             Bounds = {Width = 0; Height = 0};
-            Velocity = None
         }
 
         // This is the function that validates every image in the the table above
@@ -95,7 +94,6 @@ module Presentation =
         let largeInvader = {
             Position = {X = 7.; Y = 1.};
             Bounds = {Width = 0; Height = 0};
-            Velocity = None
         }
         let invader = { Entity = largeInvader; InvaderState = Closed; Type = Large } |> Invader
         let game = {
@@ -114,7 +112,6 @@ module Presentation =
         let mediumInvader = {
             Position = {X = 7.; Y = 1.};
             Bounds = {Width = 0; Height = 0};
-            Velocity = None
         }
         let invader = { Entity = mediumInvader; InvaderState = Open; Type = Medium } |> Invader
         let game = {

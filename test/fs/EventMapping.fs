@@ -8,9 +8,6 @@ open SpaceInvaders.Game
 [<TestFixture>]
 module EventMapping =
 
-    let equal expected actual = 
-        Assert.AreEqual(expected, actual)
-
     let initialGame = -1;
 
     let mutable updatedGame = initialGame
@@ -95,3 +92,11 @@ module EventMapping =
 
         List.isEmpty events |> equal true
 
+    [<Test>]
+    let ``tick maps to an update`` () =
+        let mapper = mapEvents updateFunc
+
+        let tickEvent = Tick 3.
+        mapper 1 tickEvent |> ignore
+
+        (events = [ Update 3.] ) |> equal true
