@@ -32,8 +32,11 @@ module Presentation =
         let laser =  {Position = {X = 10.; Y = 20.}; 
                       Bounds = {Width = 0; Height = 0};}
 
-        let game = { 
-            Entities = [ { Entity = laser; RightForce = false; LeftForce = false } |> Laser ]
+        let game = { Entities = [ 
+                                 { Entity = laser; 
+                                   RightForce = false; 
+                                   LeftForce = false } |> Laser ]
+                     LastUpdate = 0.
         }
 
         presenter' game |> ignore
@@ -47,7 +50,9 @@ module Presentation =
                        Bounds = {Width = 0; Height = 0};}
 
         let game = { 
-            Entities = [ { BulletProperties.Entity = bullet; Velocity = {X = 0.; Y = 0.} } |> Bullet ]
+            Entities = [ { BulletProperties.Entity = bullet; 
+                           Velocity = {X = 0.; Y = 0.} } |> Bullet ];
+            LastUpdate = 0.
         }
 
         presenter' game |> ignore
@@ -76,7 +81,8 @@ module Presentation =
                 Type = invaderType } |> Invader
 
             let game = {
-                Entities = [ invader ]
+                Entities = [ invader ];
+                LastUpdate = 0.;
             }
 
             presenter' game |> ignore
@@ -97,7 +103,8 @@ module Presentation =
         }
         let invader = { Entity = largeInvader; InvaderState = Closed; Type = Large } |> Invader
         let game = {
-            Entities = [ invader ]
+            Entities = [ invader ];
+            LastUpdate = 0.;
         }
 
         presenter' game |> ignore
@@ -114,9 +121,7 @@ module Presentation =
             Bounds = {Width = 0; Height = 0};
         }
         let invader = { Entity = mediumInvader; InvaderState = Open; Type = Medium } |> Invader
-        let game = {
-            Entities = [ invader ]
-        }
+        let game = { Entities = [ invader ]; LastUpdate = 0. }
 
         presenter' game |> ignore
 

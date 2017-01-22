@@ -43,7 +43,7 @@ let main() =
         eventHandler ({key = e.keyCode } |> KeyUp) |> ignore
         null)
 
-    do start Browser.window.requestAnimationFrame eventHandler renderFunc (Browser.performance.now()) |> ignore
+    do start Browser.window.requestAnimationFrame eventHandler renderFunc |> ignore
 
 do
     main ()

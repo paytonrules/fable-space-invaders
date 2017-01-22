@@ -43,11 +43,11 @@ type EntityType =
 
 type Entities = EntityType list
 
+type Delta = float
 type Game = {
     Entities: Entities
+    LastUpdate: Delta
 }
-
-type Delta = float
 
 type Event = 
 | MoveLeft
@@ -73,7 +73,8 @@ let initialLaser = {
 }
 
 let initialGame = { 
-    Entities = [ (Laser initialLaser) ] @ initialInvaders
+    Entities = [ (Laser initialLaser) ] @ initialInvaders;
+    LastUpdate = 0.
 }
 
 let pushLaser entities update = 

@@ -32,9 +32,7 @@ module MovingLaser =
 
     [<Test>]
     let ``move left applies left force to the laser`` () =
-        let game = {
-            Entities = [laser]
-        }
+        let game = { Entities = [laser]; LastUpdate = 0.}
 
         let updatedGame = update game MoveLeft
         let newLaser = findLaser updatedGame.Entities
@@ -42,9 +40,7 @@ module MovingLaser =
 
     [<Test>]
     let ``move right applies right force to the laser`` () =
-        let game = {
-            Entities = [laser]
-        }
+        let game = { Entities = [laser]; LastUpdate = 0. }
 
         let updatedGame = update game MoveRight
         let newLaser = findLaser updatedGame.Entities
@@ -57,9 +53,7 @@ module MovingLaser =
             LeftForce = false;
             RightForce = true; } |> Laser
 
-        let game = {
-            Entities = [movingRightLaser]
-        }
+        let game = { Entities = [movingRightLaser]; LastUpdate = 0.;}
 
         let updatedGame = update game StopMoveRight
         let newLaser = findLaser updatedGame.Entities
@@ -72,9 +66,7 @@ module MovingLaser =
             LeftForce = true;
             RightForce = false; } |> Laser
 
-        let game = {
-            Entities = [movingLeftLaser]
-        }
+        let game = { Entities = [movingLeftLaser]; LastUpdate = 0.}
 
         let updatedGame = update game StopMoveLeft
         let newLaser = findLaser updatedGame.Entities
@@ -100,9 +92,7 @@ module UpdatingLaser =
             LeftForce = false;
             RightForce = false; } |> Laser
 
-        let game = {
-            Entities = [laser]
-        }
+        let game = { Entities = [laser]; LastUpdate = 0.; }
 
         let updateEvent = Event.Update 10.
         let updatedGame = update game updateEvent
@@ -117,9 +107,7 @@ module UpdatingLaser =
             LeftForce = false;
             RightForce = true; } |> Laser
 
-        let game = {
-            Entities = [laser]
-        }
+        let game = { Entities = [laser]; LastUpdate = 0. }
 
         let updateEvent = Event.Update 1.
         let updatedGame = update game updateEvent
@@ -134,9 +122,7 @@ module UpdatingLaser =
             LeftForce = false;
             RightForce = true; } |> Laser
 
-        let game = {
-            Entities = [laser]
-        }
+        let game = { Entities = [laser]; LastUpdate = 0.}
 
         let updateEvent = Event.Update 2.
         let updatedGame = update game updateEvent

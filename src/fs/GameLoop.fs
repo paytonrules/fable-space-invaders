@@ -27,9 +27,10 @@ let createGameEventHandler update initialGame :EventHandler<'Game> =
 
 let convertToTick delta =
     delta |> Tick
-let start requestFrame eventHandler renderer now = 
+let start requestFrame eventHandler renderer = 
     let rec step delta =
+        printf "%f" delta
         delta |> convertToTick |> eventHandler |> renderer |> ignore
         requestFrame step |> ignore
 
-    step(now)
+    step(0.)

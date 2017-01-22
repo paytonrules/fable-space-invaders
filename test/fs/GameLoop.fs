@@ -51,25 +51,24 @@ module GameLoop =
 
     [<Test>]
     let ``requests a frame immediately on being called`` () =
-        start requestFrame ignore ignore 0.
+        start requestFrame ignore ignore
 
         List.length callbacks |> equal 1
 
     [<Test>]
     let ``request frame will (eventually) request another frame`` () =
-        start requestFrame ignore ignore 0.
+        start requestFrame ignore ignore
         List.head callbacks <| 1.
 
         List.length callbacks |> equal 2
 
     [<Test>]
-    let ``when the loop is started the update is called with 'now'`` () =
+    let ``when the loop is started the update is called with 0`` () =
         let eventHandler = createGameEventHandler updateFunc gameAsListOfEvents 
-        let start' = start requestFrame eventHandler ignore
+        
+        start requestFrame eventHandler ignore
 
-        start' 35.
-
-        let expectedEvent = 35. |> Tick
+        let expectedEvent = 0. |> Tick
         equal true ([expectedEvent] = gameAsListOfEvents)
 
     [<Test>]
@@ -79,12 +78,7 @@ module GameLoop =
             renderedGame <- game
         let eventHandler = createGameEventHandler updateFunc gameAsListOfEvents 
 
-        let start' = start requestFrame eventHandler renderer
-        start' 10.
+        start requestFrame eventHandler renderer
 
-        let expectedGame = Tick 10.
+        let expectedGame = Tick 0.
         equal true ([expectedGame] = renderedGame)
-
-
-
-    
