@@ -113,7 +113,7 @@ module UpdatingLaser =
         let updatedGame = update game updateEvent
 
         let newLaser = findLaser updatedGame.Entities
-        equal newLaser.Entity.Position.X (defaultEntity.Position.X + speedPerMillisecond)
+        equal newLaser.Entity.Position.X (defaultEntity.Position.X + Laser.speedPerMillisecond)
 
     [<Test>]
     let ``account for delta when moving the laser`` () =
@@ -128,7 +128,7 @@ module UpdatingLaser =
         let updatedGame = update game updateEvent
 
         let newLaser = findLaser updatedGame.Entities
-        equal newLaser.Entity.Position.X (defaultEntity.Position.X + (2. * speedPerMillisecond))
+        equal newLaser.Entity.Position.X (defaultEntity.Position.X + (2. * Laser.speedPerMillisecond))
 
     [<Test>]
     let ``update a laser with left force, move to the left`` () = 
@@ -143,7 +143,7 @@ module UpdatingLaser =
         let updatedGame = update game updateEvent
 
         let newLaser = findLaser updatedGame.Entities
-        equal newLaser.Entity.Position.X (defaultEntity.Position.X - (2. * speedPerMillisecond))
+        equal newLaser.Entity.Position.X (defaultEntity.Position.X - (2. * Laser.speedPerMillisecond))
 
     [<Test>]
     let ``update a laser with both forces, go nowhere`` () = 
@@ -199,6 +199,38 @@ module UpdatingLaser =
 
         let newLaser = findLaser updatedGame.Entities
         equal newLaser.Entity.Position.X entityAtRightBorder.Position.X
+
+[<TestFixture>]
+module ShootBullets =
+
+    let game = {
+        Entities = [];
+        LastUpdate = 0.
+    }
+
+    [<Test>]
+    let ``a bullet is created on the Shoot event`` () =
+        let updatedGame = update game Shoot
+
+        let bullet = updatedGame.Entities
+                     |> List.tryPick  (function Bullet e -> Some e | _ -> None)
+
+        equal false (bullet = None)
+
+    [<Test>]
+    let ``a bullet is not created if a bullet is present`` () =
+        let firstGame = update game Shoot 
+        let secondGame = update firstGame Shoot
+
+        let bullets = secondGame.Entities
+                     |> List.filter  (function Bullet e -> true | _ -> false)
+
+        List.length bullets |> equal 1 
+
+
+
+    (* Make sure you don't make two bullets, and that the bullet is in the right spot, with the right features *)
+
 
 
 [<TestFixture>]
