@@ -88,20 +88,35 @@ let pushLaserRight entities = pushLaser entities (fun e -> {e with RightForce = 
 let stopPushingLaserRight entities = pushLaser entities (fun e -> {e with RightForce = false })
 let stopPushingLaserLeft entities = pushLaser entities (fun e -> {e with LeftForce = false })
 
-let updateLaser laserProperties delta = 
-    let direction = if laserProperties.RightForce && laserProperties.LeftForce then 0.
-                    else if laserProperties.LeftForce then -1.
-                    else if laserProperties.RightForce then 1.
-                    else 0.
+let laserDirection laserProperties = 
+    match laserProperties with 
+    | { RightForce = true; LeftForce = true } -> 0.
+    | { LeftForce = true } -> -1.
+    | { RightForce = true } -> 1.
+    | _ -> 0.
 
-    let xMove = direction * speedPerMillisecond * delta
-    let newX = laserProperties.Entity.Position.X + xMove
-    let clampedX = match newX with
-                   | newX when newX < (float SpaceInvaders.Constraints.Bounds.Left) ->
-                    SpaceInvaders.Constraints.Bounds.Left |> float
-                   | newX when newX + (float laserProperties.Entity.Bounds.Width) > (float SpaceInvaders.Constraints.Bounds.Right) ->
-                    SpaceInvaders.Constraints.Bounds.Right - laserProperties.Entity.Bounds.Width |> float
-                   | newX -> newX
+let clamp minMax value = 
+    match value with
+    | value when value < fst minMax -> fst minMax
+    | value when value > snd minMax -> snd minMax
+    | _ -> value
+
+let calculateLaserMove delta direction = 
+    direction * speedPerMillisecond * delta
+    
+let calculateNextXpos laserProperties movement = 
+    laserProperties.Entity.Position.X + movement
+
+let updateLaser laserProperties delta = 
+    let maxRight = SpaceInvaders.Constraints.Bounds.Right - 
+                    laserProperties.Entity.Bounds.Width |> float
+    let xRange = (float SpaceInvaders.Constraints.Bounds.Left, maxRight)
+
+    let clampedX = laserProperties
+                   |> laserDirection
+                   |> calculateLaserMove delta
+                   |> calculateNextXpos laserProperties
+                   |> clamp xRange
 
     let newPosition = {laserProperties.Entity.Position with X = clampedX }
                     
