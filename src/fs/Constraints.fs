@@ -1,4 +1,12 @@
 module SpaceInvaders.Constraints
 
-let width = 217.
-let height = 248.
+type Rect = {
+    Left: int;
+    Right: int
+}
+let Width = 217.
+let Height = 248.
+let Bounds = {
+    Left = 3;
+    Right = 214
+}

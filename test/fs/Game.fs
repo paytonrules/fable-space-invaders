@@ -81,7 +81,7 @@ module UpdatingLaser =
         |> function Some laser -> laser | None -> failwith "laser not found"
 
     let defaultEntity = {
-        Position = {X = 0.; Y = 1.};
+        Position = {X = 100.; Y = 1.};
         Bounds = {Width = 10; Height = 10};
     }
 
@@ -159,6 +159,47 @@ module UpdatingLaser =
 
         let newLaser = findLaser updatedGame.Entities
         equal newLaser.Entity.Position.X defaultEntity.Position.X
+
+    [<Test>]
+    let ``stop the laser at the left constraint`` () =
+        let entityAtLeftBorder = { defaultEntity with Position = 
+                                                                { defaultEntity.Position with 
+                                                                    X = SpaceInvaders.Constraints.Bounds.Left |> float
+                                                                }
+                                 }
+        let laser = {
+            LaserProperties.Entity = entityAtLeftBorder;
+            LeftForce = true;
+            RightForce = false; } |> Laser
+
+        
+        let game = { Entities = [laser]; LastUpdate = 0.}
+        let updateEvent = Event.Update 3.
+        let updatedGame = update game updateEvent
+
+        let newLaser = findLaser updatedGame.Entities
+        equal newLaser.Entity.Position.X entityAtLeftBorder.Position.X
+
+    [<Test>]
+    let ``stop the laser at the right constraint`` () =
+        let entityAtRightBorder = { defaultEntity with Position = 
+                                                                { defaultEntity.Position with 
+                                                                    X = SpaceInvaders.Constraints.Bounds.Right
+                                                                            - defaultEntity.Bounds.Width |> float
+                                                                }
+                                 }
+        let laser = {
+            LaserProperties.Entity = entityAtRightBorder;
+            LeftForce = false;
+            RightForce = true; } |> Laser
+        
+        let game = { Entities = [laser]; LastUpdate = 0.}
+        let updateEvent = Event.Update 3.
+        let updatedGame = update game updateEvent
+
+        let newLaser = findLaser updatedGame.Entities
+        equal newLaser.Entity.Position.X entityAtRightBorder.Position.X
+
 
 [<TestFixture>]
 module UpdateFunc = 

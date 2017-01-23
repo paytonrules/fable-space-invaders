@@ -67,7 +67,7 @@ let initialInvaders = [
 
 let initialLaser = {
     LaserProperties.Entity = { Position = { X = 105.; Y = 216. } 
-                               Bounds = { Width = 20; Height = 30 }}
+                               Bounds = { Width = 13; Height = 30 }}
     RightForce = false
     LeftForce = false
 }
@@ -95,8 +95,15 @@ let updateLaser laserProperties delta =
                     else 0.
 
     let xMove = direction * speedPerMillisecond * delta
-    let newPosition = {laserProperties.Entity.Position with 
-                        X = laserProperties.Entity.Position.X + xMove }
+    let newX = laserProperties.Entity.Position.X + xMove
+    let clampedX = match newX with
+                   | newX when newX < (float SpaceInvaders.Constraints.Bounds.Left) ->
+                    SpaceInvaders.Constraints.Bounds.Left |> float
+                   | newX when newX + (float laserProperties.Entity.Bounds.Width) > (float SpaceInvaders.Constraints.Bounds.Right) ->
+                    SpaceInvaders.Constraints.Bounds.Right - laserProperties.Entity.Bounds.Width |> float
+                   | newX -> newX
+
+    let newPosition = {laserProperties.Entity.Position with X = clampedX }
                     
     { laserProperties with Entity =
                            { laserProperties.Entity with Position = newPosition } }
