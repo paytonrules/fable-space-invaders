@@ -5,9 +5,9 @@ open SpaceInvaders.GameLoop
 
 [<TestFixture>]
 module GameLoop =
-    let equal expected actual = 
-        Assert.AreEqual(expected, actual)
+
     let mutable gameAsListOfEvents = []
+   
     let updateFunc game event =
         gameAsListOfEvents <- event :: game
         gameAsListOfEvents

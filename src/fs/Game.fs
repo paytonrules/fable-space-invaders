@@ -57,34 +57,39 @@ type Event =
 | StopMoveLeft
 | StopMoveRight
 
-
-let initialInvaders = [
-    { Entity = { Position = {X = 3.; Y = 20.}
-                 Bounds = { Width = 30; Height = 30 }}
-      InvaderState = Closed
-      Type = Small} |> Invader]
-
-let initialLaser = {
-    LaserProperties.Entity = { Position = { X = 105.; Y = 216. } 
-                               Bounds = { Width = 13; Height = 30 }}
-    RightForce = false
-    LeftForce = false
-}
-
-let initialGame = { 
-    Entities = [ (Laser initialLaser) ] @ initialInvaders;
-    LastUpdate = 0.
-}
-
 let clamp minMax value = 
     match value with
     | value when value < fst minMax -> fst minMax
     | value when value > snd minMax -> snd minMax
     | _ -> value
 
+let replaceEntity entityType newEntity = 
+    match entityType with 
+    | Laser laser -> { laser with Entity = newEntity } |> Laser
+    | Bullet bullet -> { bullet with Entity = newEntity } |> Bullet
+    | Invader invader -> { invader with Entity = newEntity } |> Invader
+
+let getEntity entityType = 
+    match entityType with 
+    | Laser laser -> laser.Entity
+    | Bullet bullet -> bullet.Entity 
+    | Invader invader -> invader.Entity
+
 
 module Laser = 
     let speedPerMillisecond = 0.200
+    let bounds = { Width = 11; Height = 8 }
+
+    let create position = 
+        let entity = { Position = position;
+                       Bounds = bounds }
+
+        {
+            LaserProperties.Entity = entity;
+            LeftForce = false;
+            RightForce = false
+        } |> Laser
+
     let pushLaser entities update = 
         entities
         |> List.map (function 
@@ -95,6 +100,9 @@ module Laser =
     let pushLaserRight entities = pushLaser entities (fun e -> {e with RightForce = true })
     let stopPushingLaserRight entities = pushLaser entities (fun e -> {e with RightForce = false })
     let stopPushingLaserLeft entities = pushLaser entities (fun e -> {e with LeftForce = false })
+
+    let midpoint laser = 
+        (float laser.Entity.Bounds.Width) / 2. |> ceil
 
     let laserDirection laserProperties = 
         match laserProperties with 
@@ -123,14 +131,20 @@ module Laser =
         let newPosition = {laserProperties.Entity.Position with X = clampedX }
                         
         { laserProperties with Entity =
-                            { laserProperties.Entity with Position = newPosition } }
+                                        { laserProperties.Entity with Position = newPosition } }
 
 
 module Bullet = 
+    let Height = 4
+
     let create position = 
         { Velocity = { X = 0.; Y = 0. };
-          Entity = {Position = { X = 0.; Y = 0. };
-          Bounds = { Width = 0; Height = 0 }}} |> Bullet
+          Entity = {Position = position;
+                    Bounds = { Width = 0; Height = 0 }}} |> Bullet
+
+let findLaser entities = 
+    entities
+    |> List.tryPick  (function Laser e -> Some e | _ -> None)
 
 let findBullet entities = 
     entities
@@ -138,11 +152,35 @@ let findBullet entities =
 
 let addBullet game = 
     match findBullet game.Entities with
-    | Some _ -> game
-    | None ->
-        let bullet = Bullet.create { X = 0.; Y = 0. }
+    | None -> match findLaser game.Entities with
+              | Some laser -> 
+                let offset = { X = Laser.midpoint laser;
+                               Y = (float -Bullet.Height) }
 
-        { game with Entities = game.Entities @ [bullet] }
+                let bullet = Bullet.create { X = laser.Entity.Position.X + offset.X;
+                                             Y = laser.Entity.Position.Y + offset.Y }
+                { game with Entities = game.Entities @ [bullet] }
+              | None -> game
+    | Some _ -> game
+
+let initialInvaders = [
+    { Entity = { Position = {X = 3.; Y = 20.}
+                 Bounds = { Width = 30; Height = 30 }}
+      InvaderState = Closed
+      Type = Small} |> Invader]
+
+let initialLaser = {
+    LaserProperties.Entity = { Position = { X = 105.; Y = 216. } 
+                               Bounds = { Width = 11; Height = 8 }}
+    RightForce = false
+    LeftForce = false
+}
+
+let initialGame = { 
+    Entities = [ (Laser initialLaser) ] @ initialInvaders;
+    LastUpdate = 0.
+}
+
 
 let updateEntities game delta = 
     {game with Entities = game.Entities |> List.map (function

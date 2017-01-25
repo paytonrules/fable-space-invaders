@@ -202,11 +202,23 @@ module UpdatingLaser =
 
 [<TestFixture>]
 module ShootBullets =
+    let requiredLaser = {
+        Entity = { Position = { X = 0.; Y = 0. }
+                   Bounds = { Width = 1; Height = 1; }
+                 };
+        RightForce = false;
+        LeftForce = false } |> Laser
 
     let game = {
-        Entities = [];
+        Entities = [requiredLaser];
         LastUpdate = 0.
     }
+
+    let findBullet entities = 
+        let bullet = SpaceInvaders.Game.findBullet entities 
+        match bullet with
+        | None -> failwith "bullet not found"
+        | Some bullet -> bullet
 
     [<Test>]
     let ``a bullet is created on the Shoot event`` () =
@@ -218,18 +230,29 @@ module ShootBullets =
         equal false (bullet = None)
 
     [<Test>]
-    let ``a bullet is not created if a bullet is present`` () =
+    let ``a second bullet is not created if a bullet is present`` () =
         let firstGame = update game Shoot 
         let secondGame = update firstGame Shoot
 
-        let bullets = secondGame.Entities
-                     |> List.filter  (function Bullet e -> true | _ -> false)
+        let bulletCount  = secondGame.Entities
+                           |> List.filter  (function Bullet e -> true | _ -> false)
+                           |> List.length
 
-        List.length bullets |> equal 1 
+        equal 1 bulletCount
 
+    [<Test>]
+    let ``the bullet starts at the laser's nozzle`` () =
+        let laser = Laser.create { X = 20.; Y = 30.; }
+        let game = { 
+            Entities = [laser];
+            LastUpdate = 0.
+        }
 
+        let updatedGame = update game Shoot
 
-    (* Make sure you don't make two bullets, and that the bullet is in the right spot, with the right features *)
+        let bullet = findBullet updatedGame.Entities
+        let expectedBulletPosition = { X = 26.; Y = 30. - (float Bullet.Height) ; }
+        equal expectedBulletPosition bullet.Entity.Position |> ignore
 
 
 
