@@ -10,6 +10,13 @@ type Vector2 = {
     Y: float;
 }
 
+module Vector2 =
+    let add vector1 vector2 = 
+        { X = vector1.X + vector2.X; Y = vector1.Y + vector2.Y }
+
+    let scale vector scale = 
+        { X = vector.X * scale; Y = vector.Y * scale }
+
 type Position = Vector2
 
 type BulletProperties = {
@@ -65,6 +72,8 @@ let clamp minMax value =
 module Laser = 
     let speedPerMillisecond = 0.200
     let bounds = { Width = 13; Height = 8 }
+    let midpoint = (float bounds.Width) / 2. |> floor  // IOW - 6
+
 
     let updateProperties laser properties = 
         { laser with Properties = properties }
@@ -92,9 +101,6 @@ module Laser =
     let pushLaserRight entities = pushLaser entities (fun e -> {e with RightForce = true })
     let stopPushingLaserRight entities = pushLaser entities (fun e -> {e with RightForce = false })
     let stopPushingLaserLeft entities = pushLaser entities (fun e -> {e with LeftForce = false })
-
-    let midpoint laser = 
-        (float laser.Bounds.Width) / 2. |> ceil
 
     let laserDirection laser = 
         let someDirection = properties laser
@@ -133,11 +139,23 @@ module Laser =
 module Bullet = 
     let Height = 4
 
-    let create position = 
-        { Properties = { Velocity = { X = 0.; Y = 0. } } |> Bullet;
+    let create position bulletProperties = 
+        { Properties = bulletProperties;
           Position = position;
           Bounds = { Width = 0; Height = 0 }}
 
+    let createWithDefaultProperties position = 
+        create position (Bullet { Velocity = { X = 0.; Y = -0.1 }})
+
+    let update bullet delta = 
+        let newPosition = match bullet.Properties with
+                          | Bullet properties -> 
+                                properties.Velocity
+                                |> Vector2.scale <| delta
+                                |> Vector2.add bullet.Position
+                          | _ -> bullet.Position
+
+        { bullet with Position = newPosition }
 let findLaser entities = 
     let isLaser entity = 
         match entity.Properties with
@@ -162,11 +180,10 @@ let addBullet game =
     match findBullet game.Entities with
     | None -> match findLaser game.Entities with
               | Some laser -> 
-                let offset = { X = Laser.midpoint laser;
+                let offset = { X = Laser.midpoint;
                                Y = (float -Bullet.Height) }
-
-                let bullet = Bullet.create { X = laser.Position.X + offset.X;
-                                             Y = laser.Position.Y + offset.Y }
+                let bullet = Vector2.add laser.Position offset
+                             |> Bullet.createWithDefaultProperties 
                 { game with Entities = game.Entities @ [bullet] }
               | None -> game
     | Some _ -> game
@@ -190,7 +207,7 @@ let updateEntities game delta =
                                                         match entity.Properties with 
                                                         | Laser _ -> Laser.update entity delta
                                                         | Invader _ -> entity
-                                                        | Bullet _ -> entity) }
+                                                        | Bullet _ -> Bullet.update entity delta) }
 
 let updateGame game timeSinceGameStarted = 
     let newGame = updateEntities game (timeSinceGameStarted - game.LastUpdate)

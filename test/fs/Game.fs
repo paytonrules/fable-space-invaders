@@ -233,6 +233,29 @@ module ShootBullets =
         let expectedBulletPosition = { X = 26.; Y = 30. - (float Bullet.Height) ; }
         equal expectedBulletPosition bullet.Position |> ignore
 
+[<TestFixture>]
+module UpdateBullet = 
+    [<Test>]
+    let ``a bullet goes up the velocity each update`` () =
+        let position = { X = 10.; Y = 10. }
+        let properties = { Velocity = { X = 1.; Y = 1.}} |> Bullet
+        let bullet = Bullet.create position properties
+        let delta = 1.
+
+        let updatedBullet = Bullet.update bullet delta
+        
+        equal { X = 11.; Y = 11. } updatedBullet.Position
+
+    [<Test>]
+    let ``the going up accounts for the delta`` () =
+        let position = { X = 10.; Y = 10. }
+        let properties = { Velocity = { X = 1.; Y = 1.}} |> Bullet
+        let bullet = Bullet.create position properties
+        let delta = 0.5
+
+        let updatedBullet = Bullet.update bullet delta
+        
+        equal { X = 10.5; Y = 10.5 } updatedBullet.Position
 
 [<TestFixture>]
 module UpdateFunc = 
