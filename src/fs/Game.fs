@@ -64,7 +64,7 @@ let clamp minMax value =
 
 module Laser = 
     let speedPerMillisecond = 0.200
-    let bounds = { Width = 11; Height = 8 }
+    let bounds = { Width = 13; Height = 8 }
 
     let updateProperties laser properties = 
         { laser with Properties = properties }
