@@ -8,34 +8,39 @@ open SpaceInvaders.Game
 module InitialInvaderPositioning =
     [<Test>]
     let ``it puts the first invader at 3. 20.`` () =
-        let (Invader firstInvader) = List.head initialInvaders
+        let firstInvader = List.head initialInvaders
 
-        equal firstInvader.Entity.Position {X = 3.; Y = 20.}
+        equal firstInvader.Position {X = 3.; Y = 20.}
+
+module LaserTest = 
+
+    let findLaser entities = 
+        match SpaceInvaders.Game.findLaser entities with
+        | Some laser -> laser
+        | None -> failwith "No Laser Found"
+        
+    let findLaserProperties entities =
+        let laser = findLaser entities
+        match laser.Properties with 
+        | Laser props -> props
+        | _ -> failwith "Laser did not have laser properties which is impossible"
 
 [<TestFixture>]
 module MovingLaser =
-    let findLaser entities =
-        entities
-        |> List.tryPick  (function Laser e -> Some e | _ -> None)
-        |> function Some laser -> laser | None -> failwith "laser not found"
-
-    let defaultEntity = {
-        Position = {X = 0.; Y = 1.}
-        Bounds = {Width = 10; Height = 10}
-    }
+    let defaultLaserProperties = { LeftForce = false; RightForce = false } |> Laser
 
     let laser = {
-        Entity = defaultEntity;
-        LeftForce = false;
-        RightForce = false; } |> Laser
-
+        Position = { X = 0.; Y = 1. };
+        Bounds = { Width = 10; Height = 10 };
+        Properties = defaultLaserProperties;
+    }
 
     [<Test>]
     let ``move left applies left force to the laser`` () =
         let game = { Entities = [laser]; LastUpdate = 0.}
 
         let updatedGame = update game MoveLeft
-        let newLaser = findLaser updatedGame.Entities
+        let newLaser = LaserTest.findLaserProperties updatedGame.Entities
         equal true newLaser.LeftForce
 
     [<Test>]
@@ -43,171 +48,143 @@ module MovingLaser =
         let game = { Entities = [laser]; LastUpdate = 0. }
 
         let updatedGame = update game MoveRight
-        let newLaser = findLaser updatedGame.Entities
+        let newLaser = LaserTest.findLaserProperties updatedGame.Entities
         equal true newLaser.RightForce
 
     [<Test>]
     let ``stop move right removes right force from the laser`` () =
-        let movingRightLaser = {
-            LaserProperties.Entity = defaultEntity;
-            LeftForce = false;
-            RightForce = true; } |> Laser
+        let properties = { RightForce = true; LeftForce = false } |> Laser
+        let movingRightLaser = Laser.updateProperties laser properties
 
         let game = { Entities = [movingRightLaser]; LastUpdate = 0.;}
 
         let updatedGame = update game StopMoveRight
-        let newLaser = findLaser updatedGame.Entities
+        let newLaser = LaserTest.findLaserProperties updatedGame.Entities
         equal false newLaser.RightForce
 
     [<Test>]
     let `` stop move left removes left force from the laser`` () =
-        let movingLeftLaser = {
-            LaserProperties.Entity = defaultEntity;
-            LeftForce = true;
-            RightForce = false; } |> Laser
+        let properties = { LeftForce = true; RightForce = false; } |> Laser
+        let movingLeftLaser = Laser.updateProperties laser properties
 
         let game = { Entities = [movingLeftLaser]; LastUpdate = 0.}
 
         let updatedGame = update game StopMoveLeft
-        let newLaser = findLaser updatedGame.Entities
+        let newLaser = LaserTest.findLaserProperties updatedGame.Entities
         equal false newLaser.LeftForce
 
 [<TestFixture>]
 module UpdatingLaser =
 
-    let findLaser entities =
-        entities
-        |> List.tryPick  (function Laser e -> Some e | _ -> None)
-        |> function Some laser -> laser | None -> failwith "laser not found"
+    let laserProperties = {
+        LeftForce = false;
+        RightForce = false} |> Laser
 
-    let defaultEntity = {
+    let laser = {
         Position = {X = 100.; Y = 1.};
         Bounds = {Width = 10; Height = 10};
+        Properties = laserProperties
     }
 
     [<Test>]
     let ``update a laser with no forces, it stays in the same place`` () =
-        let laser = {
-            LaserProperties.Entity = defaultEntity;
-            LeftForce = false;
-            RightForce = false; } |> Laser
-
         let game = { Entities = [laser]; LastUpdate = 0.; }
 
         let updateEvent = Event.Update 10.
         let updatedGame = update game updateEvent
 
-        let newLaser = findLaser updatedGame.Entities
-        equal newLaser.Entity.Position defaultEntity.Position
+        let newLaser = LaserTest.findLaser updatedGame.Entities
+        equal newLaser.Position laser.Position
 
     [<Test>]
     let ``update a laser with right force, and it moves to the right`` () =
-        let laser = {
-            LaserProperties.Entity = defaultEntity;
-            LeftForce = false;
-            RightForce = true; } |> Laser
+        let properties = { RightForce = true; LeftForce = false } |> Laser
+        let rightForceLaser = Laser.updateProperties laser properties
 
-        let game = { Entities = [laser]; LastUpdate = 0. }
+        let game = { Entities = [rightForceLaser]; LastUpdate = 0. }
 
         let updateEvent = Event.Update 1.
         let updatedGame = update game updateEvent
 
-        let newLaser = findLaser updatedGame.Entities
-        equal newLaser.Entity.Position.X (defaultEntity.Position.X + Laser.speedPerMillisecond)
+        let newLaser = LaserTest.findLaser updatedGame.Entities
+        equal newLaser.Position.X (rightForceLaser.Position.X + Laser.speedPerMillisecond)
 
     [<Test>]
     let ``account for delta when moving the laser`` () =
-        let laser = {
-            LaserProperties.Entity = defaultEntity;
-            LeftForce = false;
-            RightForce = true; } |> Laser
-
-        let game = { Entities = [laser]; LastUpdate = 1.}
+        let properties = { RightForce = true; LeftForce = false } |> Laser
+        let rightForceLaser = Laser.updateProperties laser properties
+        
+        let game = { Entities = [rightForceLaser]; LastUpdate = 1.}
 
         let updateEvent = Event.Update 3.
         let updatedGame = update game updateEvent
 
-        let newLaser = findLaser updatedGame.Entities
-        equal newLaser.Entity.Position.X (defaultEntity.Position.X + (2. * Laser.speedPerMillisecond))
+        let newLaser = LaserTest.findLaser updatedGame.Entities
+        equal newLaser.Position.X (rightForceLaser.Position.X + (2. * Laser.speedPerMillisecond))
 
     [<Test>]
     let ``update a laser with left force, move to the left`` () = 
-        let laser = {
-            LaserProperties.Entity = defaultEntity;
-            LeftForce = true;
-            RightForce = false; } |> Laser
+        let laserProperties = { RightForce = false; LeftForce = true } |> Laser
+        let leftForceLaser = Laser.updateProperties laser laserProperties
 
-        let game = { Entities = [laser]; LastUpdate = 1.}
+        let game = { Entities = [leftForceLaser]; LastUpdate = 1.}
 
         let updateEvent = Event.Update 3.
         let updatedGame = update game updateEvent
 
-        let newLaser = findLaser updatedGame.Entities
-        equal newLaser.Entity.Position.X (defaultEntity.Position.X - (2. * Laser.speedPerMillisecond))
+        let newLaser = LaserTest.findLaser updatedGame.Entities
+        equal newLaser.Position.X (leftForceLaser.Position.X - (2. * Laser.speedPerMillisecond))
 
     [<Test>]
     let ``update a laser with both forces, go nowhere`` () = 
-        let laser = {
-            LaserProperties.Entity = defaultEntity;
-            LeftForce = true;
-            RightForce = true; } |> Laser
+        let laserProperties = { RightForce = true; LeftForce = true } |> Laser
+        let stuckLaser = Laser.updateProperties laser laserProperties
 
-        let game = { Entities = [laser]; LastUpdate = 1.}
+        let game = { Entities = [stuckLaser]; LastUpdate = 1.}
 
         let updateEvent = Event.Update 3.
         let updatedGame = update game updateEvent
 
-        let newLaser = findLaser updatedGame.Entities
-        equal newLaser.Entity.Position.X defaultEntity.Position.X
+        let newLaser = LaserTest.findLaser updatedGame.Entities
+        equal newLaser.Position.X stuckLaser.Position.X
 
     [<Test>]
     let ``stop the laser at the left constraint`` () =
-        let entityAtLeftBorder = { defaultEntity with Position = 
-                                                                { defaultEntity.Position with 
-                                                                    X = SpaceInvaders.Constraints.Bounds.Left |> float
-                                                                }
-                                 }
-        let laser = {
-            LaserProperties.Entity = entityAtLeftBorder;
-            LeftForce = true;
-            RightForce = false; } |> Laser
-
+        let laserProperties =  { LeftForce = true; RightForce = false } |> Laser
+        let leftPosition = { laser.Position with X = SpaceInvaders.Constraints.Bounds.Left |> float }
+        let leftLaser = { laser with Position = leftPosition }
+                        |> Laser.updateProperties <| laserProperties
         
-        let game = { Entities = [laser]; LastUpdate = 0.}
+        let game = { Entities = [leftLaser]; LastUpdate = 0.}
         let updateEvent = Event.Update 3.
         let updatedGame = update game updateEvent
 
-        let newLaser = findLaser updatedGame.Entities
-        equal newLaser.Entity.Position.X entityAtLeftBorder.Position.X
+        let newLaser = LaserTest.findLaser updatedGame.Entities
+        equal newLaser.Position.X leftLaser.Position.X
 
     [<Test>]
     let ``stop the laser at the right constraint`` () =
-        let entityAtRightBorder = { defaultEntity with Position = 
-                                                                { defaultEntity.Position with 
-                                                                    X = SpaceInvaders.Constraints.Bounds.Right
-                                                                            - defaultEntity.Bounds.Width |> float
-                                                                }
-                                 }
-        let laser = {
-            LaserProperties.Entity = entityAtRightBorder;
-            LeftForce = false;
-            RightForce = true; } |> Laser
-        
-        let game = { Entities = [laser]; LastUpdate = 0.}
-        let updateEvent = Event.Update 3.
+        let laserProperties = { LeftForce = false; RightForce = true } |> Laser
+        let rightEdge = SpaceInvaders.Constraints.Bounds.Right - laser.Bounds.Width
+        let rightPosition = { laser.Position with X = rightEdge |> float }
+        let laserAtRightBorder = { laser with Position = rightPosition }  
+                                 |> Laser.updateProperties <| laserProperties
+       
+        let game = { Entities = [laserAtRightBorder]; LastUpdate = 0.}
+        let updateEvent = Event.Update 3. 
         let updatedGame = update game updateEvent
 
-        let newLaser = findLaser updatedGame.Entities
-        equal newLaser.Entity.Position.X entityAtRightBorder.Position.X
+        let newLaser = LaserTest.findLaser updatedGame.Entities
+        equal newLaser.Position.X laserAtRightBorder.Position.X
 
 [<TestFixture>]
 module ShootBullets =
     let requiredLaser = {
-        Entity = { Position = { X = 0.; Y = 0. }
-                   Bounds = { Width = 1; Height = 1; }
-                 };
-        RightForce = false;
-        LeftForce = false } |> Laser
+        Position = { X = 0.; Y = 0. };
+        Bounds = { Width = 1; Height = 1; };
+        Properties = { RightForce = false;
+                       LeftForce = false } |> Laser
+    }
 
     let game = {
         Entities = [requiredLaser];
@@ -224,8 +201,7 @@ module ShootBullets =
     let ``a bullet is created on the Shoot event`` () =
         let updatedGame = update game Shoot
 
-        let bullet = updatedGame.Entities
-                     |> List.tryPick  (function Bullet e -> Some e | _ -> None)
+        let bullet = SpaceInvaders.Game.findBullet updatedGame.Entities
 
         equal false (bullet = None)
 
@@ -235,7 +211,10 @@ module ShootBullets =
         let secondGame = update firstGame Shoot
 
         let bulletCount  = secondGame.Entities
-                           |> List.filter  (function Bullet e -> true | _ -> false)
+                           |> List.filter  (fun entity ->
+                                                match entity.Properties with
+                                                | Bullet _ -> true
+                                                | _ -> false)
                            |> List.length
 
         equal 1 bulletCount
@@ -252,8 +231,7 @@ module ShootBullets =
 
         let bullet = findBullet updatedGame.Entities
         let expectedBulletPosition = { X = 26.; Y = 30. - (float Bullet.Height) ; }
-        equal expectedBulletPosition bullet.Entity.Position |> ignore
-
+        equal expectedBulletPosition bullet.Position |> ignore
 
 
 [<TestFixture>]

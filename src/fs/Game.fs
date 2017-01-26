@@ -12,36 +12,34 @@ type Vector2 = {
 
 type Position = Vector2
 
-type Entity = {
-    Position: Vector2;
-    Bounds: Bounds;
-}
-
 type BulletProperties = {
-    Entity: Entity;
     Velocity: Vector2;
 }
 
 type InvaderState = Open | Closed
 type InvaderType = Large | Medium | Small
 type InvaderProperties = {
-    Entity: Entity;
     InvaderState: InvaderState;
     Type: InvaderType;
 }
 
 type LaserProperties = {
-    Entity: Entity;
     LeftForce: bool;
     RightForce: bool;
 }
 
-type EntityType = 
+type EntityProperties =
 | Bullet of BulletProperties
 | Invader of InvaderProperties
 | Laser of LaserProperties
 
-type Entities = EntityType list
+type Entity  =  {
+    Position: Vector2;
+    Bounds: Bounds;
+    Properties: EntityProperties;
+}
+
+type Entities = Entity list
 
 type Delta = float
 type Game = {
@@ -63,38 +61,32 @@ let clamp minMax value =
     | value when value > snd minMax -> snd minMax
     | _ -> value
 
-let replaceEntity entityType newEntity = 
-    match entityType with 
-    | Laser laser -> { laser with Entity = newEntity } |> Laser
-    | Bullet bullet -> { bullet with Entity = newEntity } |> Bullet
-    | Invader invader -> { invader with Entity = newEntity } |> Invader
-
-let getEntity entityType = 
-    match entityType with 
-    | Laser laser -> laser.Entity
-    | Bullet bullet -> bullet.Entity 
-    | Invader invader -> invader.Entity
-
 
 module Laser = 
     let speedPerMillisecond = 0.200
     let bounds = { Width = 11; Height = 8 }
 
-    let create position = 
-        let entity = { Position = position;
-                       Bounds = bounds }
+    let updateProperties laser properties = 
+        { laser with Properties = properties }
 
+    let properties entity = 
+        match entity.Properties with
+        | Laser prop -> Some(prop)
+        | _ -> None
+    
+    let create position = 
         {
-            LaserProperties.Entity = entity;
-            LeftForce = false;
-            RightForce = false
-        } |> Laser
+            Position = position;
+            Bounds = bounds;
+            Properties = { LeftForce = false; RightForce = false} |> Laser
+        } 
 
     let pushLaser entities update = 
         entities
-        |> List.map (function 
-                    | Laser e -> update e |> Laser 
-                    | e -> e)
+        |> List.map (fun entity ->
+                        match entity.Properties with
+                        | Laser prop -> { entity with Properties = update prop |> Laser  }
+                        | _ -> entity)
 
     let pushLaserLeft entities = pushLaser entities (fun e -> {e with LeftForce = true })
     let pushLaserRight entities = pushLaser entities (fun e -> {e with RightForce = true })
@@ -102,53 +94,69 @@ module Laser =
     let stopPushingLaserLeft entities = pushLaser entities (fun e -> {e with LeftForce = false })
 
     let midpoint laser = 
-        (float laser.Entity.Bounds.Width) / 2. |> ceil
+        (float laser.Bounds.Width) / 2. |> ceil
 
-    let laserDirection laserProperties = 
-        match laserProperties with 
-        | { RightForce = true; LeftForce = true } -> 0.
-        | { LeftForce = true } -> -1.
-        | { RightForce = true } -> 1.
-        | _ -> 0.
+    let laserDirection laser = 
+        let someDirection = properties laser
+                            |> Option.map (function 
+                                           | { RightForce = true; LeftForce = true } -> 0.
+                                           | { LeftForce = true; } -> -1.
+                                           | { RightForce = true } -> 1.
+                                           | _ -> 0.)
+
+        match someDirection with
+        | Some direction -> direction
+        | None -> 0.
 
     let calculateLaserMove delta direction = 
         direction * speedPerMillisecond * delta
             
-    let calculateNextXpos laserProperties movement = 
-        laserProperties.Entity.Position.X + movement
+    let calculateNextXpos laser movement = 
+        laser.Position.X + movement
 
-    let update laserProperties delta = 
+    let update laser delta = 
         let maxRight = SpaceInvaders.Constraints.Bounds.Right - 
-                        laserProperties.Entity.Bounds.Width |> float
+                        laser.Bounds.Width |> float
         let xRange = (float SpaceInvaders.Constraints.Bounds.Left, maxRight)
 
-        let clampedX = laserProperties
+        let clampedX = laser
                     |> laserDirection
                     |> calculateLaserMove delta
-                    |> calculateNextXpos laserProperties
+                    |> calculateNextXpos laser
                     |> clamp xRange
 
-        let newPosition = {laserProperties.Entity.Position with X = clampedX }
+        let newPosition = {laser.Position with X = clampedX }
                         
-        { laserProperties with Entity =
-                                        { laserProperties.Entity with Position = newPosition } }
+        { laser with Position = newPosition }
 
 
 module Bullet = 
     let Height = 4
 
     let create position = 
-        { Velocity = { X = 0.; Y = 0. };
-          Entity = {Position = position;
-                    Bounds = { Width = 0; Height = 0 }}} |> Bullet
+        { Properties = { Velocity = { X = 0.; Y = 0. } } |> Bullet;
+          Position = position;
+          Bounds = { Width = 0; Height = 0 }}
 
 let findLaser entities = 
+    let isLaser entity = 
+        match entity.Properties with
+        | Laser e -> true
+        | _ -> false
+
     entities
-    |> List.tryPick  (function Laser e -> Some e | _ -> None)
+    |> List.filter isLaser
+    |> (function | [laser] -> Some laser | _ -> None)
 
 let findBullet entities = 
+    let isBullet entity = 
+        match entity.Properties with
+        | Bullet e -> true
+        | _ -> false
+
     entities
-    |> List.tryPick  (function Bullet e -> Some e | _ -> None)
+    |> List.filter isBullet
+    |> (function | [bullet] -> Some bullet | _ -> None)
 
 let addBullet game = 
     match findBullet game.Entities with
@@ -157,40 +165,37 @@ let addBullet game =
                 let offset = { X = Laser.midpoint laser;
                                Y = (float -Bullet.Height) }
 
-                let bullet = Bullet.create { X = laser.Entity.Position.X + offset.X;
-                                             Y = laser.Entity.Position.Y + offset.Y }
+                let bullet = Bullet.create { X = laser.Position.X + offset.X;
+                                             Y = laser.Position.Y + offset.Y }
                 { game with Entities = game.Entities @ [bullet] }
               | None -> game
     | Some _ -> game
 
 let initialInvaders = [
-    { Entity = { Position = {X = 3.; Y = 20.}
-                 Bounds = { Width = 30; Height = 30 }}
-      InvaderState = Closed
-      Type = Small} |> Invader]
+    {  Position = {X = 3.; Y = 20.};
+       Bounds = { Width = 30; Height = 30 };
+       Properties = { InvaderState = Closed; 
+                      Type = Small} |> Invader
+    }]
 
-let initialLaser = {
-    LaserProperties.Entity = { Position = { X = 105.; Y = 216. } 
-                               Bounds = { Width = 11; Height = 8 }}
-    RightForce = false
-    LeftForce = false
-}
+let initialLaser = Laser.create { X = 105.; Y = 216. }
 
 let initialGame = { 
-    Entities = [ (Laser initialLaser) ] @ initialInvaders;
+    Entities = [ initialLaser ] @ initialInvaders;
     LastUpdate = 0.
 }
 
-
 let updateEntities game delta = 
-    {game with Entities = game.Entities |> List.map (function
-                                                     | Laser e -> Laser.update e delta |> Laser
-                                                     | Invader e -> e |> Invader
-                                                     | Bullet e -> e |> Bullet)}
+    { game with Entities = game.Entities |> List.map (fun entity -> 
+                                                        match entity.Properties with 
+                                                        | Laser _ -> Laser.update entity delta
+                                                        | Invader _ -> entity
+                                                        | Bullet _ -> entity) }
 
 let updateGame game timeSinceGameStarted = 
     let newGame = updateEntities game (timeSinceGameStarted - game.LastUpdate)
     {newGame with LastUpdate = timeSinceGameStarted}
+
 let update (game:Game) (event:Event) = 
     match event with 
     | MoveLeft -> { game with Entities = Laser.pushLaserLeft game.Entities }

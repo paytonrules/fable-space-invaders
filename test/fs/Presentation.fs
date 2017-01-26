@@ -29,15 +29,13 @@ module Presentation =
 
     [<Test>]
     let ``it draws the laser where it is`` () =
-        let laser =  {Position = {X = 10.; Y = 20.}; 
-                      Bounds = {Width = 0; Height = 0};}
+        let laserProperties = { RightForce = false; LeftForce = false } |> Laser
+        let laser =  { Position = {X = 10.; Y = 20.}; 
+                       Bounds = {Width = 0; Height = 0};
+                       Properties = laserProperties }
 
-        let game = { Entities = [ 
-                                 { Entity = laser; 
-                                   RightForce = false; 
-                                   LeftForce = false } |> Laser ]
-                     LastUpdate = 0.
-        }
+        let game = { Entities = [ laser ];
+                     LastUpdate = 0. }
 
         presenter' game |> ignore
 
@@ -46,12 +44,13 @@ module Presentation =
 
     [<Test>]
     let ``it draws the bullet at its position when present`` () =
-        let bullet =  {Position = {X = 30.; Y = 40.}; 
-                       Bounds = {Width = 0; Height = 0};}
+        let bulletProperties = { Velocity = { X = 0.; Y = 0. } } |> Bullet
+        let bullet =  { Position = {X = 30.; Y = 40.}; 
+                        Bounds = {Width = 0; Height = 0}
+                        Properties = bulletProperties }
 
         let game = { 
-            Entities = [ { BulletProperties.Entity = bullet; 
-                           Velocity = {X = 0.; Y = 0.} } |> Bullet ];
+            Entities = [ bullet ];
             LastUpdate = 0.
         }
 
@@ -68,17 +67,17 @@ module Presentation =
                             (Medium, Closed, "mediumInvaderClosed");
                             (Small, Open, "smallInvaderOpen");
                             (Small, Closed, "smallInvaderClosed")]
-        let entity = {
-            Position = {X = 7.; Y = 1.};
-            Bounds = {Width = 0; Height = 0};
-        }
+        let position = { X = 7.; Y = 1. }
+        let bounds = { Width = 0; Height = 0 }
 
         // This is the function that validates every image in the the table above
         let validateImageRendered (invaderType, state, expectedImage) =
+            let invaderProperties = { InvaderState = state;
+                                      Type = invaderType } |> Invader
             let invader = { 
-                Entity = entity; 
-                InvaderState = state; 
-                Type = invaderType } |> Invader
+                Position = position; 
+                Bounds = bounds; 
+                Properties = invaderProperties }
 
             let game = {
                 Entities = [ invader ];
@@ -89,43 +88,7 @@ module Presentation =
 
             let image = renderedImages |> List.find (fun x -> x.Image = expectedImage)
 
-            equal image.Position {X = 7.; Y = 1.}
-
+            equal image.Position { X = 7.; Y = 1. }
 
         // Loop through all entries above and check for presence
         invaderTypes |> List.iter validateImageRendered
-
-    [<Test>]
-    let ``it will draw a large invader, closed`` () =
-        let largeInvader = {
-            Position = {X = 7.; Y = 1.};
-            Bounds = {Width = 0; Height = 0};
-        }
-        let invader = { Entity = largeInvader; InvaderState = Closed; Type = Large } |> Invader
-        let game = {
-            Entities = [ invader ];
-            LastUpdate = 0.;
-        }
-
-        presenter' game |> ignore
-
-        let invaderImage = renderedImages 
-                           |> List.find (fun x -> x.Image = "largeInvaderClosed")
-
-        equal invaderImage.Position {X = 7.; Y = 1.}
-
-    [<Test>]
-    let ``it will draw a medium invader, open`` () =
-        let mediumInvader = {
-            Position = {X = 7.; Y = 1.};
-            Bounds = {Width = 0; Height = 0};
-        }
-        let invader = { Entity = mediumInvader; InvaderState = Open; Type = Medium } |> Invader
-        let game = { Entities = [ invader ]; LastUpdate = 0. }
-
-        presenter' game |> ignore
-
-        let invaderImage = renderedImages 
-                           |> List.find (fun x -> x.Image = "mediumInvaderOpen")
-
-        equal invaderImage.Position {X = 7.; Y = 1.}

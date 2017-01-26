@@ -20,9 +20,9 @@ type EmailAddress = EmailAddress of string
 
 let presenter (renderer:(list<Image<'HTMLImage>> -> unit)) (lookupTable:Map<Image, 'HTMLImage>) (game:Game) =
     let lookupImageKey = function
-    | EntityType.Laser _ -> Laser
-    | EntityType.Bullet _ -> Bullet
-    | EntityType.Invader e -> match (e.Type, e.InvaderState) with
+    | EntityProperties.Laser _ -> Laser
+    | EntityProperties.Bullet _ -> Bullet
+    | Invader e -> match (e.Type, e.InvaderState) with
                               | Large, Open -> LargeInvaderOpen
                               | Large, Closed ->  LargeInvaderClosed
                               | Medium, Open -> MediumInvaderOpen
@@ -32,20 +32,14 @@ let presenter (renderer:(list<Image<'HTMLImage>> -> unit)) (lookupTable:Map<Imag
 
     let lookupImage imageKey = Map.tryFind imageKey lookupTable
 
-    let positionEntity image (entity:Entity) =
+    let positionImage image (entity:Entity) =
         {Image = image;
          Position = {X = entity.Position.X;
                      Y = entity.Position.Y}}
 
-    let positionImage image entity =
-        match entity with
-        | EntityType.Laser e -> positionEntity image e.Entity
-        | EntityType.Bullet e -> positionEntity image e.Entity
-        | EntityType.Invader e -> positionEntity image e.Entity
-
     let imagesToDraw = game.Entities
                        |> List.map (fun entity ->
-                                        lookupImageKey entity
+                                        lookupImageKey entity.Properties
                                         |> lookupImage
                                         |> Option.map (fun img -> positionImage img entity))
 
