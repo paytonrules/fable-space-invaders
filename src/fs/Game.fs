@@ -68,6 +68,9 @@ let clamp minMax value =
     | value when value > snd minMax -> snd minMax
     | _ -> value
 
+module Invasion = 
+    let columnWidth = 16.
+
 
 module Laser = 
     let speedPerMillisecond = 0.200
@@ -156,6 +159,11 @@ module Bullet =
                           | _ -> bullet.Position
 
         { bullet with Position = newPosition }
+let isBullet entity = 
+    match entity.Properties with
+    | Bullet e -> true
+    | _ -> false
+
 let findLaser entities = 
     let isLaser entity = 
         match entity.Properties with
@@ -167,11 +175,6 @@ let findLaser entities =
     |> (function | [laser] -> Some laser | _ -> None)
 
 let findBullet entities = 
-    let isBullet entity = 
-        match entity.Properties with
-        | Bullet e -> true
-        | _ -> false
-
     entities
     |> List.filter isBullet
     |> (function | [bullet] -> Some bullet | _ -> None)
@@ -188,12 +191,18 @@ let addBullet game =
               | None -> game
     | Some _ -> game
 
+let invasionUpperLeftCorner = { X = 3.; Y = 30.}
 let initialInvaders = [
-    {  Position = {X = 3.; Y = 20.};
+    {  Position = invasionUpperLeftCorner;
        Bounds = { Width = 30; Height = 30 };
        Properties = { InvaderState = Closed; 
                       Type = Small} |> Invader
-    }]
+    };
+    { Position = Vector2.add invasionUpperLeftCorner { X = Invasion.columnWidth; Y = 0. }
+      Bounds = { Width = 30; Height = 30 };
+      Properties = { InvaderState = Closed; 
+                     Type = Small } |> Invader
+    }  ]
 
 let initialLaser = Laser.create { X = 105.; Y = 216. }
 
@@ -209,9 +218,20 @@ let updateEntities game delta =
                                                         | Invader _ -> entity
                                                         | Bullet _ -> Bullet.update entity delta) }
 
+let isPastTheTopOfTheScreen entity = 
+    entity.Position.Y + (float entity.Bounds.Height) < (float SpaceInvaders.Constraints.Bounds.Top)
+
+let removeOffscreenBullet game = 
+    let isBulletOffScreen entity = isBullet entity && isPastTheTopOfTheScreen entity
+    {game with Entities = List.filter (isBulletOffScreen >> not) game.Entities}
+
+let updateTimestamp game timeSinceGameStarted = 
+    { game with LastUpdate = timeSinceGameStarted}
+
 let updateGame game timeSinceGameStarted = 
-    let newGame = updateEntities game (timeSinceGameStarted - game.LastUpdate)
-    {newGame with LastUpdate = timeSinceGameStarted}
+    updateEntities game (timeSinceGameStarted - game.LastUpdate)
+    |> removeOffscreenBullet
+    |> updateTimestamp <| timeSinceGameStarted
 
 let update (game:Game) (event:Event) = 
     match event with 

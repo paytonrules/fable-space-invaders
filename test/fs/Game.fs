@@ -7,10 +7,17 @@ open SpaceInvaders.Game
 [<TestFixture>]
 module InitialInvaderPositioning =
     [<Test>]
-    let ``it puts the first invader at 3. 20.`` () =
+    let ``it puts the first invader at the upper left corner of the invasion`` () =
         let firstInvader = List.head initialInvaders
 
-        equal firstInvader.Position {X = 3.; Y = 20.}
+        equal firstInvader.Position invasionUpperLeftCorner
+
+    [<Test>]
+    let ``it puts the next invader the width of the invader to the right`` () = 
+        let secondInvader = List.item 1 initialInvaders 
+
+        let secondPosition = Vector2.add invasionUpperLeftCorner { X = Invasion.columnWidth; Y = 0. }
+        equal secondInvader.Position secondPosition
 
 module LaserTest = 
 
@@ -262,8 +269,29 @@ module UpdateFunc =
     [<Test>]
     let ``update the timestamp on each update`` () =
         let game = { Entities = []; LastUpdate = 2.}
-        let updateEvent = Event.Update 3.
 
-        let newGame = update game updateEvent
+        let newGame = updateGame game 3.
 
         equal newGame.LastUpdate 3.
+
+    [<Test>]
+    let ``after update, if the bullet is off the screen then remove it`` () =
+        let bulletBounds = { Height = 5; Width = 0}
+        let offTheTop = SpaceInvaders.Constraints.Bounds.Top - bulletBounds.Height - 1
+        let position = { X = 0.; Y = float offTheTop }
+        let bullet = { Bullet.createWithDefaultProperties position with Bounds = bulletBounds }
+
+        let game = updateGame {Entities = [bullet]; LastUpdate = 0.} 0. 
+
+        equal List.empty game.Entities
+
+    [<Test>]
+    let ``if the bullet is still on the screen then keep it`` () =
+        let bulletBounds = { Height = 5; Width = 0}
+        let offTheTop = SpaceInvaders.Constraints.Bounds.Top - bulletBounds.Height + 1
+        let position = { X = 0.; Y = float offTheTop }
+        let bullet = { Bullet.createWithDefaultProperties position with Bounds = bulletBounds }
+
+        let game = updateGame {Entities = [bullet]; LastUpdate = 0.} 0. 
+
+        equal [bullet] game.Entities
