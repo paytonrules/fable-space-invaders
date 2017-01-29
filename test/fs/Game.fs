@@ -36,6 +36,42 @@ module InitialInvaderPositioning =
 
         equal rowTwoInvader.Position rowTwoPosition
 
+    let sliceInvaderList list (start, slice) = 
+        list
+        |> Seq.skip start
+        |> Seq.take slice
+        |> Seq.toList
+
+    let sliceInitialInvaders = sliceInvaderList initialInvaders
+
+    let assertAllInvaders invaders ofType = 
+        invaders
+        |> List.forall (fun entity -> 
+                        match entity.Properties with
+                        | Invader e -> e.Type = ofType 
+                        | _ -> false) 
+        |> equal true 
+
+        
+    [<Test>]
+    let ``the first two rows are small invaders`` () =
+        let firstTwoRows = sliceInitialInvaders (0, Invasion.columns * 2)
+
+        assertAllInvaders firstTwoRows Small
+
+    [<Test>]
+    let ``the second two rows are medium invaders`` () =
+        let twoRows = Invasion.columns * 2
+        let secondTwoRows = sliceInitialInvaders (twoRows, twoRows)
+
+        assertAllInvaders secondTwoRows Medium
+
+    [<Test>]
+    let ``the third two rows are Large invaders`` () =
+        let twoRows = Invasion.columns * 2
+        let secondTwoRows = sliceInitialInvaders (twoRows * 2, twoRows)
+
+        assertAllInvaders secondTwoRows Large
 
 module LaserTest = 
 

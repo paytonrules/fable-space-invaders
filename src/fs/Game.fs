@@ -70,11 +70,11 @@ let clamp minMax value =
 
 
 module Invader = 
-    let create position = 
+    let create (position, invaderType) = 
         { Position = position;
           Bounds = { Width = 30; Height = 30 };
           Properties = { InvaderState = Closed; 
-                         Type = Small} |> Invader};
+                         Type = invaderType} |> Invader};
 
 module Invasion = 
     let columnWidth = 16.
@@ -82,6 +82,7 @@ module Invasion =
     let columns = 11
     let rows = 6
     let totalInvaders = columns * rows
+
 
 module Laser = 
     let speedPerMillisecond = 0.200
@@ -205,13 +206,22 @@ let addBullet game =
 
 let invasionUpperLeftCorner = { X = 3.; Y = 30.}
 
-let positionForInvader i = 
+let positionForInvaderAtIndex i = 
     let row = i / Invasion.columns |> float
     let column = i % Invasion.columns |> float
     { X = column * Invasion.columnWidth; Y = row * Invasion.rowHeight }
     |> Vector2.add invasionUpperLeftCorner;
 
-let initialInvaders = [0..(Invasion.columns * Invasion.rows) - 1] |> List.map (positionForInvader >> Invader.create)
+let typeForInvaderAtIndex = function
+    | i when i < Invasion.columns * 2 -> Small
+    | i when i >= Invasion.columns * 2 && i < Invasion.columns * 4 -> Medium
+    | _ -> Large
+
+let positionAndTypeForInvaderAtIndex i = 
+    (positionForInvaderAtIndex i, typeForInvaderAtIndex i)
+
+let initialInvaders = [0..(Invasion.columns * Invasion.rows) - 1] 
+                      |> List.map (positionAndTypeForInvaderAtIndex >> Invader.create)
 
 let initialLaser = Laser.create { X = 105.; Y = 216. }
 
