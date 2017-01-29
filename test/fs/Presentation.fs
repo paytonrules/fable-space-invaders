@@ -34,9 +34,7 @@ module Presentation =
                        Bounds = {Width = 0; Height = 0};
                        Properties = laserProperties }
 
-        let game = { Entities = [ laser ];
-                     LastUpdate = 0. }
-
+        let game = createGame [ laser ]
         presenter' game |> ignore
 
         let laserImage = renderedImages |> List.find (fun x -> x.Image = "laser")
@@ -49,10 +47,7 @@ module Presentation =
                         Bounds = {Width = 0; Height = 0}
                         Properties = bulletProperties }
 
-        let game = { 
-            Entities = [ bullet ];
-            LastUpdate = 0.
-        }
+        let game = createGame [ bullet ]
 
         presenter' game |> ignore
 
@@ -79,10 +74,7 @@ module Presentation =
                 Bounds = bounds; 
                 Properties = invaderProperties }
 
-            let game = {
-                Entities = [ invader ];
-                LastUpdate = 0.;
-            }
+            let game = createGame [ invader ]
 
             presenter' game |> ignore
 

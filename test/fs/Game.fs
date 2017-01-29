@@ -98,7 +98,7 @@ module MovingLaser =
 
     [<Test>]
     let ``move left applies left force to the laser`` () =
-        let game = { Entities = [laser]; LastUpdate = 0.}
+        let game = createGame [laser]
 
         let updatedGame = update game MoveLeft
         let newLaser = LaserTest.findLaserProperties updatedGame.Entities
@@ -106,7 +106,7 @@ module MovingLaser =
 
     [<Test>]
     let ``move right applies right force to the laser`` () =
-        let game = { Entities = [laser]; LastUpdate = 0. }
+        let game = createGame [laser]
 
         let updatedGame = update game MoveRight
         let newLaser = LaserTest.findLaserProperties updatedGame.Entities
@@ -117,7 +117,7 @@ module MovingLaser =
         let properties = { RightForce = true; LeftForce = false } |> Laser
         let movingRightLaser = Laser.updateProperties laser properties
 
-        let game = { Entities = [movingRightLaser]; LastUpdate = 0.;}
+        let game = createGame [movingRightLaser]
 
         let updatedGame = update game StopMoveRight
         let newLaser = LaserTest.findLaserProperties updatedGame.Entities
@@ -128,7 +128,7 @@ module MovingLaser =
         let properties = { LeftForce = true; RightForce = false; } |> Laser
         let movingLeftLaser = Laser.updateProperties laser properties
 
-        let game = { Entities = [movingLeftLaser]; LastUpdate = 0.}
+        let game = createGame [movingLeftLaser]
 
         let updatedGame = update game StopMoveLeft
         let newLaser = LaserTest.findLaserProperties updatedGame.Entities
@@ -149,7 +149,7 @@ module UpdatingLaser =
 
     [<Test>]
     let ``update a laser with no forces, it stays in the same place`` () =
-        let game = { Entities = [laser]; LastUpdate = 0.; }
+        let game = createGame [laser]
 
         let updateEvent = Event.Update 10.
         let updatedGame = update game updateEvent
@@ -162,7 +162,7 @@ module UpdatingLaser =
         let properties = { RightForce = true; LeftForce = false } |> Laser
         let rightForceLaser = Laser.updateProperties laser properties
 
-        let game = { Entities = [rightForceLaser]; LastUpdate = 0. }
+        let game = createGame [rightForceLaser]
 
         let updateEvent = Event.Update 1.
         let updatedGame = update game updateEvent
@@ -175,8 +175,8 @@ module UpdatingLaser =
         let properties = { RightForce = true; LeftForce = false } |> Laser
         let rightForceLaser = Laser.updateProperties laser properties
         
-        let game = { Entities = [rightForceLaser]; LastUpdate = 1.}
-
+        let game = { createGame [rightForceLaser] with LastUpdate = 1.}
+                   
         let updateEvent = Event.Update 3.
         let updatedGame = update game updateEvent
 
@@ -188,7 +188,7 @@ module UpdatingLaser =
         let laserProperties = { RightForce = false; LeftForce = true } |> Laser
         let leftForceLaser = Laser.updateProperties laser laserProperties
 
-        let game = { Entities = [leftForceLaser]; LastUpdate = 1.}
+        let game = { createGame [leftForceLaser] with LastUpdate = 1. }
 
         let updateEvent = Event.Update 3.
         let updatedGame = update game updateEvent
@@ -201,7 +201,7 @@ module UpdatingLaser =
         let laserProperties = { RightForce = true; LeftForce = true } |> Laser
         let stuckLaser = Laser.updateProperties laser laserProperties
 
-        let game = { Entities = [stuckLaser]; LastUpdate = 1.}
+        let game = { createGame [stuckLaser] with LastUpdate = 1.}
 
         let updateEvent = Event.Update 3.
         let updatedGame = update game updateEvent
@@ -216,7 +216,7 @@ module UpdatingLaser =
         let leftLaser = { laser with Position = leftPosition }
                         |> Laser.updateProperties <| laserProperties
         
-        let game = { Entities = [leftLaser]; LastUpdate = 0.}
+        let game = createGame [leftLaser]
         let updateEvent = Event.Update 3.
         let updatedGame = update game updateEvent
 
@@ -231,7 +231,7 @@ module UpdatingLaser =
         let laserAtRightBorder = { laser with Position = rightPosition }  
                                  |> Laser.updateProperties <| laserProperties
        
-        let game = { Entities = [laserAtRightBorder]; LastUpdate = 0.}
+        let game = createGame [laserAtRightBorder]
         let updateEvent = Event.Update 3. 
         let updatedGame = update game updateEvent
 
@@ -247,10 +247,7 @@ module ShootBullets =
                        LeftForce = false } |> Laser
     }
 
-    let game = {
-        Entities = [requiredLaser];
-        LastUpdate = 0.
-    }
+    let game = createGame [requiredLaser]
 
     let findBullet entities = 
         let bullet = SpaceInvaders.Game.findBullet entities 
@@ -283,10 +280,7 @@ module ShootBullets =
     [<Test>]
     let ``the bullet starts at the laser's nozzle`` () =
         let laser = Laser.create { X = 20.; Y = 30.; }
-        let game = { 
-            Entities = [laser];
-            LastUpdate = 0.
-        }
+        let game = createGame [laser]
 
         let updatedGame = update game Shoot
 
@@ -322,7 +316,7 @@ module UpdateBullet =
 module UpdateFunc = 
     [<Test>]
     let ``update the timestamp on each update`` () =
-        let game = { Entities = []; LastUpdate = 2.}
+        let game = { createGame [] with LastUpdate = 2.}
 
         let newGame = updateGame game 3.
 
@@ -335,7 +329,7 @@ module UpdateFunc =
         let position = { X = 0.; Y = float offTheTop }
         let bullet = { Bullet.createWithDefaultProperties position with Bounds = bulletBounds }
 
-        let game = updateGame {Entities = [bullet]; LastUpdate = 0.} 0. 
+        let game = updateGame (createGame [bullet]) 0. 
 
         equal List.empty game.Entities
 
@@ -346,6 +340,6 @@ module UpdateFunc =
         let position = { X = 0.; Y = float offTheTop }
         let bullet = { Bullet.createWithDefaultProperties position with Bounds = bulletBounds }
 
-        let game = updateGame {Entities = [bullet]; LastUpdate = 0.} 0. 
+        let game = updateGame (createGame [bullet]) 0. 
 
         equal [bullet] game.Entities

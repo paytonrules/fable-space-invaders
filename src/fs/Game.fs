@@ -46,12 +46,21 @@ type Entity  =  {
     Properties: EntityProperties;
 }
 
+module Invader = 
+    let create (position, invaderType) = 
+        { Position = position;
+          Bounds = { Width = 30; Height = 30 };
+          Properties = { InvaderState = Closed; 
+                         Type = invaderType} |> Invader};
+
 type Entities = Entity list
 
 type Delta = float
 type Game = {
-    Entities: Entities
-    LastUpdate: Delta
+    Entities: Entities;
+    LastUpdate: Delta;
+    TimeToMove: Delta;
+    LastMove: Delta;
 }
 
 type Event = 
@@ -68,14 +77,6 @@ let clamp minMax value =
     | value when value > snd minMax -> snd minMax
     | _ -> value
 
-
-module Invader = 
-    let create (position, invaderType) = 
-        { Position = position;
-          Bounds = { Width = 30; Height = 30 };
-          Properties = { InvaderState = Closed; 
-                         Type = invaderType} |> Invader};
-
 module Invasion = 
     let columnWidth = 16.
     let rowHeight = 16.
@@ -83,6 +84,7 @@ module Invasion =
     let rows = 6
     let totalInvaders = columns * rows
 
+    let initialTimeToMove = 1000.
 
 module Laser = 
     let speedPerMillisecond = 0.200
@@ -149,7 +151,6 @@ module Laser =
         let newPosition = {laser.Position with X = clampedX }
                         
         { laser with Position = newPosition }
-
 
 module Bullet = 
     let Height = 4
@@ -225,10 +226,14 @@ let initialInvaders = [0..(Invasion.columns * Invasion.rows) - 1]
 
 let initialLaser = Laser.create { X = 105.; Y = 216. }
 
-let initialGame = { 
-    Entities = [ initialLaser ] @ initialInvaders;
-    LastUpdate = 0.
-}
+let createGame entities = 
+    { 
+        Entities = entities;
+        TimeToMove = Invasion.initialTimeToMove;
+        LastUpdate = 0.;
+        LastMove = 0.;
+    }
+let initialGame = [ initialLaser ] @ initialInvaders |> createGame
 
 let updateEntities game delta = 
     { game with Entities = game.Entities |> List.map (fun entity -> 
