@@ -19,6 +19,24 @@ module InitialInvaderPositioning =
         let secondPosition = Vector2.add invasionUpperLeftCorner { X = Invasion.columnWidth; Y = 0. }
         equal secondInvader.Position secondPosition
 
+    [<Test>]
+    let ``it puts the third invader two steps to the right`` () =
+        let thirdInvader = List.item 2 initialInvaders
+
+        let thirdPosition = Vector2.scale { X = Invasion.columnWidth; Y = 0.} 2.
+                            |> Vector2.add invasionUpperLeftCorner
+
+        equal thirdInvader.Position thirdPosition
+
+    [<Test>]
+    let ``it puts the next rows invader on the next row`` () =
+        let rowTwoInvader = List.item Invasion.columns initialInvaders
+
+        let rowTwoPosition = Vector2.add { X = 0.; Y = Invasion.rowHeight} invasionUpperLeftCorner
+
+        equal rowTwoInvader.Position rowTwoPosition
+
+
 module LaserTest = 
 
     let findLaser entities = 

@@ -68,9 +68,20 @@ let clamp minMax value =
     | value when value > snd minMax -> snd minMax
     | _ -> value
 
+
+module Invader = 
+    let create position = 
+        { Position = position;
+          Bounds = { Width = 30; Height = 30 };
+          Properties = { InvaderState = Closed; 
+                         Type = Small} |> Invader};
+
 module Invasion = 
     let columnWidth = 16.
-
+    let rowHeight = 16.
+    let columns = 11
+    let rows = 6
+    let totalInvaders = columns * rows
 
 module Laser = 
     let speedPerMillisecond = 0.200
@@ -159,6 +170,7 @@ module Bullet =
                           | _ -> bullet.Position
 
         { bullet with Position = newPosition }
+
 let isBullet entity = 
     match entity.Properties with
     | Bullet e -> true
@@ -192,17 +204,14 @@ let addBullet game =
     | Some _ -> game
 
 let invasionUpperLeftCorner = { X = 3.; Y = 30.}
-let initialInvaders = [
-    {  Position = invasionUpperLeftCorner;
-       Bounds = { Width = 30; Height = 30 };
-       Properties = { InvaderState = Closed; 
-                      Type = Small} |> Invader
-    };
-    { Position = Vector2.add invasionUpperLeftCorner { X = Invasion.columnWidth; Y = 0. }
-      Bounds = { Width = 30; Height = 30 };
-      Properties = { InvaderState = Closed; 
-                     Type = Small } |> Invader
-    }  ]
+
+let positionForInvader i = 
+    let row = i / Invasion.columns |> float
+    let column = i % Invasion.columns |> float
+    { X = column * Invasion.columnWidth; Y = row * Invasion.rowHeight }
+    |> Vector2.add invasionUpperLeftCorner;
+
+let initialInvaders = [0..(Invasion.columns * Invasion.rows) - 1] |> List.map (positionForInvader >> Invader.create)
 
 let initialLaser = Laser.create { X = 105.; Y = 216. }
 
