@@ -1,9 +1,15 @@
 module SpaceInvaders.Game
 
 type Delta = float
+
+type Sides = {
+    Right: float;
+    Left: float
+}
+
 type Bounds = {
     Width: int;
-    Height: int;
+    Height: int
 }
 
 type Vector2 = {
@@ -98,6 +104,28 @@ module Invasion =
     let rows = 6
     let totalInvaders = columns * rows
     let initialTimeToMove = 1000.
+
+    let invadersFrom entities = 
+        entities |> List.filter ( fun entity -> 
+                                    match entity.Properties with
+                                    | Invader _ -> true 
+                                    | _ -> false )
+
+    let rightBounds invaders = 
+        invaders
+        |> List.map (fun entity -> entity.Position.X + float entity.Bounds.Width)
+        |> List.max
+
+    let leftBounds invaders = 
+        invaders
+        |> List.map (fun entity -> entity.Position.X)
+        |> List.min
+
+    let bounds entities = 
+        let invaders = invadersFrom entities
+        if invaders |> List.isEmpty
+        then { Right = 0.; Left = 0. }
+        else { Right = rightBounds invaders; Left = leftBounds invaders }
 
 module Laser = 
     let speedPerMillisecond = 0.200

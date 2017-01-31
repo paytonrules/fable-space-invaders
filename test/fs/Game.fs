@@ -148,6 +148,100 @@ module InvasionMovement =
         | Invader props -> equal props.InvaderState Open |> ignore
         | _ -> failwith "the entity was not an invader"
 
+[<TestFixture>]
+module InvasionBounds =
+
+    [<Test>]
+    let ``If there are no Entities then Right and Left are 0`` () =
+        let bounds = Invasion.bounds []
+
+        equal bounds.Right 0.
+
+    [<Test>]
+    let ``With one invader entity use the X + Width for the right`` () =
+        let properties = { InvaderState = Closed ; Type = Small } |> Invader
+        let invader = {
+            Position = { X = 5.; Y = 0. };
+            Bounds = { Width = 5; Height = 0 };
+            Properties = properties
+        }
+        let bounds = Invasion.bounds [invader]
+
+        equal bounds.Right 10.
+
+    [<Test>]
+    let ``With many invaders use the invader farthest to the right`` () =
+        let properties = { InvaderState = Closed ; Type = Small } |> Invader
+        let invaderOne = {
+            Position = { X = 5.; Y = 0. };
+            Bounds = { Width = 5; Height = 0 };
+            Properties = properties
+        }
+        let invaderTwo = { invaderOne with Position = { X = 10.; Y = 0. }}
+        let bounds = Invasion.bounds [invaderOne; invaderTwo]
+
+        equal bounds.Right 15.
+
+    [<Test>]
+    let ``Only include invaders`` () =
+        let invaderProps = { InvaderState = Closed ; Type = Small } |> Invader
+        let bulletProps = { Velocity = { X = 0.; Y = 0. } } |> Bullet
+        let invader = {
+            Position = { X = 5.; Y = 0. };
+            Bounds = { Width = 5; Height = 0 };
+            Properties = invaderProps
+        }
+        let bullet = { invader with Position = { X = 10.; Y = 0. }; Properties = bulletProps }
+        let bounds = Invasion.bounds [invader; bullet]
+
+        equal bounds.Right 10.
+
+    [<Test>]
+    let ``Left is 0 when there are no entities`` () = 
+        let bounds = Invasion.bounds []
+
+        equal bounds.Left 0.
+
+    [<Test>]
+    let ``Left is the X of the only invader with one invader entity`` () =
+        let properties = { InvaderState = Closed ; Type = Small } |> Invader
+        let invader = {
+            Position = { X = 5.; Y = 0. };
+            Bounds = { Width = 5; Height = 0 };
+            Properties = properties
+        }
+        let bounds = Invasion.bounds [invader]
+
+        equal bounds.Left 5. 
+
+    [<Test>]
+    let ``With many invaders use the invader farthest to the left`` () =
+        let properties = { InvaderState = Closed ; Type = Small } |> Invader
+        let invaderOne = {
+            Position = { X = 5.; Y = 0. };
+            Bounds = { Width = 5; Height = 0 };
+            Properties = properties
+        }
+        let invaderTwo = { invaderOne with Position = { X = 10.; Y = 0. }}
+        let bounds = Invasion.bounds [invaderTwo; invaderOne]
+
+        equal bounds.Left 5.
+
+    [<Test>]
+    let ``Only include invaders for calculating min`` () =
+        let invaderProps = { InvaderState = Closed ; Type = Small } |> Invader
+        let bulletProps = { Velocity = { X = 0.; Y = 0. } } |> Bullet
+        let invader = {
+            Position = { X = 5.; Y = 0. };
+            Bounds = { Width = 5; Height = 0 };
+            Properties = invaderProps
+        }
+        let bullet = { invader with Position = { X = 1.; Y = 0. }; Properties = bulletProps }
+        let bounds = Invasion.bounds [invader; bullet]
+
+        equal bounds.Left 5.
+
+
 module LaserTest = 
     let findLaser entities = 
         match SpaceInvaders.Game.findLaser entities with
