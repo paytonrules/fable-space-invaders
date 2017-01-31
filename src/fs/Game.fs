@@ -1,5 +1,6 @@
 module SpaceInvaders.Game
 
+type Delta = float
 type Bounds = {
     Width: int;
     Height: int;
@@ -46,6 +47,12 @@ type Entity  =  {
     Properties: EntityProperties;
 }
 
+type InvasionStep = {
+    TimeToMove: Delta;
+    SinceLastMove: Delta;
+    Direction: Vector2;
+}
+
 module Invader = 
     let create (position, invaderType) = 
         { Position = position;
@@ -53,14 +60,22 @@ module Invader =
           Properties = { InvaderState = Closed; 
                          Type = invaderType} |> Invader};
 
+    let toggleState = function | Closed -> Open | Open -> Closed
+
+    let update (invader, invaderProps) invasion delta = 
+        if delta + invasion.SinceLastMove >= invasion.TimeToMove 
+        then 
+            let newPosition = Vector2.add invader.Position invasion.Direction  
+            let invaderProps = { invaderProps with InvaderState = toggleState invaderProps.InvaderState } |> Invader
+            { invader with Position = newPosition; Properties = invaderProps }
+        else invader
+
 type Entities = Entity list
 
-type Delta = float
 type Game = {
     Entities: Entities;
     LastUpdate: Delta;
-    TimeToMove: Delta;
-    LastMove: Delta;
+    Invasion: InvasionStep;
 }
 
 type Event = 
@@ -70,7 +85,6 @@ type Event =
 | Shoot
 | StopMoveLeft
 | StopMoveRight
-
 let clamp minMax value = 
     match value with
     | value when value < fst minMax -> fst minMax
@@ -83,15 +97,12 @@ module Invasion =
     let columns = 11
     let rows = 6
     let totalInvaders = columns * rows
-
     let initialTimeToMove = 1000.
 
 module Laser = 
     let speedPerMillisecond = 0.200
     let bounds = { Width = 13; Height = 8 }
     let midpoint = (float bounds.Width) / 2. |> floor  // IOW - 6
-
-
     let updateProperties laser properties = 
         { laser with Properties = properties }
 
@@ -229,9 +240,10 @@ let initialLaser = Laser.create { X = 105.; Y = 216. }
 let createGame entities = 
     { 
         Entities = entities;
-        TimeToMove = Invasion.initialTimeToMove;
         LastUpdate = 0.;
-        LastMove = 0.;
+        Invasion = { TimeToMove = Invasion.initialTimeToMove; 
+                     SinceLastMove = 0.; 
+                     Direction = { X = 4.0; Y = 0.0 } }
     }
 let initialGame = [ initialLaser ] @ initialInvaders |> createGame
 
@@ -239,7 +251,7 @@ let updateEntities game delta =
     { game with Entities = game.Entities |> List.map (fun entity -> 
                                                         match entity.Properties with 
                                                         | Laser _ -> Laser.update entity delta
-                                                        | Invader _ -> entity
+                                                        | Invader props -> Invader.update (entity, props) game.Invasion delta
                                                         | Bullet _ -> Bullet.update entity delta) }
 
 let isPastTheTopOfTheScreen entity = 
@@ -252,9 +264,20 @@ let removeOffscreenBullet game =
 let updateTimestamp game timeSinceGameStarted = 
     { game with LastUpdate = timeSinceGameStarted}
 
+let updateTimeSinceLastMove game delta = 
+    match game.Invasion.SinceLastMove + delta with
+    | sinceLastMove when sinceLastMove < game.Invasion.TimeToMove ->
+        { game with Invasion =
+                              { game.Invasion with SinceLastMove = sinceLastMove }}
+    | _ -> 
+        { game with Invasion = { game.Invasion with SinceLastMove = 0. }}
+
+
 let updateGame game timeSinceGameStarted = 
-    updateEntities game (timeSinceGameStarted - game.LastUpdate)
+    let delta = (timeSinceGameStarted - game.LastUpdate)
+    updateEntities game delta
     |> removeOffscreenBullet
+    |> updateTimeSinceLastMove <| delta
     |> updateTimestamp <| timeSinceGameStarted
 
 let update (game:Game) (event:Event) = 

@@ -73,8 +73,82 @@ module InitialInvaderPositioning =
 
         assertAllInvaders secondTwoRows Large
 
-module LaserTest = 
+[<TestFixture>]
+module InvasionMovement =
+    let invaderProperties = { InvaderState = Open; Type = Small }
 
+    let invader = {
+        Position = { X = 0.; Y = 0. };
+        Bounds = { Width = 0; Height = 0; };
+        Properties = invaderProperties |> Invader
+    }
+
+    [<Test>]
+    let ``if it is not time to move, because delta is smaller than the SinceLastMove, TimeToMove gap, do not move`` () =
+        let updatedInvader = Invader.update (invader, invaderProperties)
+                                { TimeToMove = 1.0; 
+                                  SinceLastMove = 0.0;
+                                  Direction = { X = 1.0; Y = 0.0 } }
+                                0.99
+
+        equal invader.Position updatedInvader.Position
+
+    [<Test>]
+    let ``move when it is time to move`` () =
+        let updatedInvader = Invader.update (invader, invaderProperties)
+                                { TimeToMove = 1.0; 
+                                  SinceLastMove = 0.0;
+                                  Direction = { X = 1.0; Y = 0.0 }}
+                                1.0
+
+        equal (invader.Position.X + 1.0) updatedInvader.Position.X
+ 
+    [<Test>]
+    let ``move when it is past time to move`` () =
+        let updatedInvader = Invader.update (invader, invaderProperties)
+                                { TimeToMove = 1.0; 
+                                  SinceLastMove = 0.0;
+                                  Direction = { X = 1.0; Y = 0.0 }}
+                                1.1
+
+        equal (invader.Position.X + 1.0) updatedInvader.Position.X
+
+    [<Test>]
+    let ``SinceLastMove accumulates, use delta + SinceLastMove to see if it is time to move`` () =
+        let updatedInvader = Invader.update (invader, invaderProperties)
+                                { TimeToMove = 1.0; 
+                                  SinceLastMove = 0.9;
+                                  Direction = { X = 1.0; Y = 0.0 }}
+                                0.1
+
+        equal (invader.Position.X + 1.0) updatedInvader.Position.X
+
+    [<Test>]
+    let ``Close the invader when it is Open (the default) and it is time to move`` () =
+        let updatedInvader = Invader.update (invader, invaderProperties)
+                                { TimeToMove = 1.0; 
+                                  SinceLastMove = 0.0;
+                                  Direction = { X = 1.0; Y = 0.0 }}
+                                1.1
+        
+        match updatedInvader.Properties with
+        | Invader props -> equal props.InvaderState Closed |> ignore
+        | _ -> failwith "the entity was not an invader"
+
+    [<Test>]
+    let ``Open the invader when it is Closed and it is time to move`` () =
+        let closedInvader = { invaderProperties with InvaderState = Closed }
+        let updatedInvader = Invader.update (invader, closedInvader)
+                                { TimeToMove = 1.0; 
+                                  SinceLastMove = 0.0;
+                                  Direction = { X = 1.0; Y = 0.0 }}
+                                1.1
+        
+        match updatedInvader.Properties with
+        | Invader props -> equal props.InvaderState Open |> ignore
+        | _ -> failwith "the entity was not an invader"
+
+module LaserTest = 
     let findLaser entities = 
         match SpaceInvaders.Game.findLaser entities with
         | Some laser -> laser
@@ -343,3 +417,21 @@ module UpdateFunc =
         let game = updateGame (createGame [bullet]) 0. 
 
         equal [bullet] game.Entities
+
+    [<Test>]
+    let ``update the invasion step with the time since last move`` () =
+        let game = updateTimeSinceLastMove (createGame []) 3.
+
+        let updatedGame = updateGame game 2.
+
+        equal 5. updatedGame.Invasion.SinceLastMove
+
+    [<Test>]
+    let ``reset the invasion step time since last move after passing the time to move`` () =
+        let game = updateTimeSinceLastMove (createGame []) 1.
+        
+        equal 1. game.Invasion.SinceLastMove
+
+        let updatedGame = updateGame game game.Invasion.TimeToMove
+
+        equal 0. updatedGame.Invasion.SinceLastMove
