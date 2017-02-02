@@ -141,7 +141,7 @@ module Invasion =
         then PastLeftEdge
         else WithinBounds
 
-    let nextDirection game = 
+    let nextInvasionDirection game = 
         let updatedInvasion = 
             match game.Entities with
             | PastRightEdge ->
@@ -340,9 +340,9 @@ let removeOffscreenBullet game =
     let isBulletOffScreen entity = isBullet entity && isPastTheTopOfTheScreen entity
     {game with Entities = List.filter (isBulletOffScreen >> not) game.Entities}
 
-let updateInvasionDirection game delta =
-    if delta + game.Invasion.SinceLastMove >= game.Invasion.TimeToMove
-    then Invasion.nextDirection game
+let changeInvasionDirection game delta =
+    if Invasion.isTimeToMove game.Invasion delta
+    then Invasion.nextInvasionDirection game
     else game
 
 let updateTimestamp game timeSinceGameStarted = 
@@ -355,12 +355,11 @@ let updateTimeSinceLastMove game delta =
     | _ -> 
         updateInvasion game { game.Invasion with SinceLastMove = 0. }
 
-
 let updateGame game timeSinceGameStarted = 
     let delta = (timeSinceGameStarted - game.LastUpdate)
     updateEntities game delta
     |> removeOffscreenBullet
-    |> updateInvasionDirection <| delta
+    |> changeInvasionDirection <| delta
     |> updateTimeSinceLastMove <| delta
     |> updateTimestamp <| timeSinceGameStarted
 
