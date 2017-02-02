@@ -159,9 +159,15 @@ module Invasion =
         { game with Invasion = updatedInvasion }
 
 module Invader = 
+
+    let bounds = function
+    | Small -> { Width = 8; Height = 8 }
+    | Medium -> { Width = 11; Height = 8 }
+    | Large -> { Width = 12; Height = 8 }
+
     let create (position, invaderType) = 
         { Position = position;
-          Bounds = { Width = 30; Height = 30 };
+          Bounds = bounds invaderType;
           Properties = { InvaderState = Closed; 
                          Type = invaderType} |> Invader};
 
