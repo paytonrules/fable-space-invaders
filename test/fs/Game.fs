@@ -3,6 +3,41 @@ namespace Test
 open Fable.Core.Testing
 open SpaceInvaders.Game
 
+[<TestFixture>]
+module EntityIntersection = 
+    let laser = { RightForce = true; LeftForce = true } |> Laser
+
+    let cases = [
+        ({ X = 0.; Y = 0. }, { X = 11.; Y = 0. }, false);
+        ({ X = 0.; Y = 0. }, { X = 10.; Y = 0. }, true);
+        ({ X = 0.; Y = 0. }, { X = 9.; Y = 0. }, true);
+        ({ X = 0.; Y = 0. }, { X = 0.; Y = 9. }, true);
+        ({ X = 0.; Y = 0. }, { X = 0.; Y = 10. }, true);
+        ({ X = 0.; Y = 0. }, { X = 0.; Y = 11. }, false);
+        ({ X = 11.; Y = 0. }, { X = 0.; Y = 0. }, false);
+        ({ X = 10.; Y = 0. }, { X = 0.; Y = 0. }, true);
+        ({ X = 9.; Y = 0. }, { X = 0.; Y = 0. }, true);
+        ({ X = 0.; Y = 9. }, { X = 0.; Y = 0. }, true);
+        ({ X = 0.; Y = 10. }, { X = 0.; Y = 0. }, true);
+        ({ X = 0.; Y = 11. }, { X = 0.; Y = 0. }, false);
+    ]
+    [<Test>]
+    let ``entity intersection, data driven test`` () = 
+
+        cases |> List.iter (fun (firstBox, secondBox, expects) -> 
+            let firstBox = {
+                Position = firstBox;
+                Bounds = { Width = 10; Height = 10 };
+                Properties = laser
+            }
+
+            let secondBox = {
+                Position = secondBox;
+                Bounds = { Width = 10; Height = 10 };
+                Properties = laser
+            }
+
+            Entity.isOverlapping firstBox secondBox |> equal expects) 
 
 [<TestFixture>]
 module InitialInvaderPositioning =

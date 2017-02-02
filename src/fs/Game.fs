@@ -60,6 +60,16 @@ module Entity =
     let updateXPos entity x = 
         { entity with Position = { X = x; Y = entity.Position.Y } }
 
+    let bottom entity = (float entity.Bounds.Height + entity.Position.Y)
+
+    let right entity = (float entity.Bounds.Width + entity.Position.X)
+
+    let isOverlapping (entityOne:Entity) entityTwo = 
+         not (entityTwo.Position.X > right entityOne
+              || right entityTwo < entityOne.Position.X
+              || entityTwo.Position.Y > bottom entityOne
+              || bottom entityTwo < entityOne.Position.Y)
+
 type InvasionStep = {
     TimeToMove: Delta;
     SinceLastMove: Delta;
