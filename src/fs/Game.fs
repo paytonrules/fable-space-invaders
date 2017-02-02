@@ -126,6 +126,38 @@ module Invasion =
     let isTimeToMove invasion delta = 
         delta + invasion.SinceLastMove >= invasion.TimeToMove 
 
+    let (|MovingRight|MovingDown|MovingLeft|) direction = 
+        if direction = Direction.Right
+        then MovingRight
+        else if direction = Direction.Left
+        then MovingLeft
+        else MovingDown
+
+    let (|PastRightEdge|PastLeftEdge|WithinBounds|) entities = 
+        let bounds = bounds entities
+        if bounds.Right >= float SpaceInvaders.Constraints.Bounds.Right 
+        then PastRightEdge
+        else if bounds.Left <= float SpaceInvaders.Constraints.Bounds.Left
+        then PastLeftEdge
+        else WithinBounds
+
+    let nextDirection game = 
+        let updatedInvasion = 
+            match game.Entities with
+            | PastRightEdge ->
+                match game.Invasion.Direction with
+                | MovingRight -> { game.Invasion with Direction = Direction.Down }
+                | MovingDown -> { game.Invasion with Direction = Direction.Left }
+                | MovingLeft -> game.Invasion
+            | PastLeftEdge ->
+                match game.Invasion.Direction with
+                | MovingLeft -> { game.Invasion with Direction = Direction.Down }
+                | MovingDown -> { game.Invasion with Direction = Direction.Right }
+                | MovingRight -> game.Invasion
+            | WithinBounds -> game.Invasion
+
+        { game with Invasion = updatedInvasion }
+
 module Invader = 
     let create (position, invaderType) = 
         { Position = position;
@@ -308,41 +340,9 @@ let removeOffscreenBullet game =
     let isBulletOffScreen entity = isBullet entity && isPastTheTopOfTheScreen entity
     {game with Entities = List.filter (isBulletOffScreen >> not) game.Entities}
 
-let (|MovingRight|MovingDown|MovingLeft|) direction = 
-    if direction = Invasion.Direction.Right
-    then MovingRight
-    else if direction = Invasion.Direction.Left
-    then MovingLeft
-    else MovingDown
-
-let (|PastRightEdge|PastLeftEdge|WithinBounds|) entities = 
-    let bounds = Invasion.bounds entities
-    if bounds.Right >= float SpaceInvaders.Constraints.Bounds.Right 
-    then PastRightEdge
-    else if bounds.Left <= float SpaceInvaders.Constraints.Bounds.Left
-    then PastLeftEdge
-    else WithinBounds
-
-let nextInvasionDirection game = 
-    let updatedInvasion = 
-        match game.Entities with
-        | PastRightEdge ->
-            match game.Invasion.Direction with
-            | MovingRight -> { game.Invasion with Direction = Invasion.Direction.Down }
-            | MovingDown -> { game.Invasion with Direction = Invasion.Direction.Left }
-            | MovingLeft -> game.Invasion
-        | PastLeftEdge ->
-            match game.Invasion.Direction with
-            | MovingLeft -> { game.Invasion with Direction = Invasion.Direction.Down }
-            | MovingDown -> { game.Invasion with Direction = Invasion.Direction.Right }
-            | MovingRight -> game.Invasion
-        | WithinBounds -> game.Invasion
-
-    { game with Invasion = updatedInvasion }
-
 let updateInvasionDirection game delta =
     if delta + game.Invasion.SinceLastMove >= game.Invasion.TimeToMove
-    then nextInvasionDirection game
+    then Invasion.nextDirection game
     else game
 
 let updateTimestamp game timeSinceGameStarted = 
