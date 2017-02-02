@@ -529,3 +529,92 @@ module UpdateFunc =
         let updatedGame = updateGame game game.Invasion.TimeToMove
 
         equal 0. updatedGame.Invasion.SinceLastMove
+
+[<TestFixture>]
+module InvasionDirection = 
+    let invaderWidth = 1;
+    let defaultInvader = {
+        Position = { X = 0.; Y = 0. };
+        Bounds = { Width = invaderWidth; Height = 1};
+        Properties = { InvaderState = Open; Type = Small }  |> Invader
+    }
+
+    let timeToMove = 1000.
+    let createGameWithInvasion invader direction = 
+        createGame invader
+                   |> updateInvasion 
+                   <| { Direction = direction; 
+                        TimeToMove = timeToMove; 
+                        SinceLastMove = 0. }
+
+    [<Test>]
+    let ``the invasion starts moving down when it hits the right edge and is moving right`` () =
+        let positionBeforeRightEdge = float SpaceInvaders.Constraints.Bounds.Right - 
+                                        Invasion.Direction.Right.X - float invaderWidth
+        let invader = Entity.updateXPos defaultInvader positionBeforeRightEdge
+        
+        let game = createGameWithInvasion [invader] Invasion.Direction.Right
+                   |> updateGame <| timeToMove
+
+        equal Invasion.Direction.Down game.Invasion.Direction
+
+    [<Test>]
+    let ``the invasion starts moving down when it moves beyond the right edge and is moving right`` () =
+        let positionBeyondRightEdge = float SpaceInvaders.Constraints.Bounds.Right
+        let invader = Entity.updateXPos defaultInvader positionBeyondRightEdge
+
+        let game = createGameWithInvasion [invader] Invasion.Direction.Right
+                   |> updateGame <| timeToMove 
+
+        equal Invasion.Direction.Down game.Invasion.Direction
+
+    [<Test>]
+    let ``the invasion starts moving left when it is beyond the right edge and is moving down`` () =
+        let positionBeyondRightEdge = float SpaceInvaders.Constraints.Bounds.Right
+        let invader = Entity.updateXPos defaultInvader positionBeyondRightEdge
+
+        let game = createGameWithInvasion [invader] Invasion.Direction.Down
+                   |> updateGame <| timeToMove
+
+        equal Invasion.Direction.Left game.Invasion.Direction
+
+    [<Test>]
+    let ``the invasion moves down when it is at the left edge and is moving left`` () =
+        let oneMoveUntilYouHitLeftBorder = float SpaceInvaders.Constraints.Bounds.Left
+                                            - Invasion.Direction.Left.X
+        let invader = Entity.updateXPos defaultInvader oneMoveUntilYouHitLeftBorder
+
+        let game = createGameWithInvasion [invader] Invasion.Direction.Left
+                   |> updateGame <| timeToMove
+
+        equal Invasion.Direction.Down game.Invasion.Direction
+
+    [<Test>]
+    let ``the invasion moves down when it beyond the left edge and is moving left`` () =
+        let onNextMoveBeyondLeftBorder = float SpaceInvaders.Constraints.Bounds.Left
+        let invader = Entity.updateXPos defaultInvader onNextMoveBeyondLeftBorder
+
+        let game = createGameWithInvasion [invader] Invasion.Direction.Left
+                   |> updateGame <| timeToMove
+
+        equal Invasion.Direction.Down game.Invasion.Direction
+
+    [<Test>]
+    let ``the invasion moves right when it beyond the left edge and is moving down`` () =
+        let onNextMoveBeyondLeftBorder = float SpaceInvaders.Constraints.Bounds.Left
+        let invader = Entity.updateXPos defaultInvader onNextMoveBeyondLeftBorder
+
+        let game = createGameWithInvasion [invader] Invasion.Direction.Down
+                   |> updateGame <| timeToMove
+
+        equal Invasion.Direction.Right game.Invasion.Direction
+
+    [<Test>]
+    let ``the direction does not change when it is not yet time to move`` () = 
+        let onNextMoveBeyondLeftBorder = float SpaceInvaders.Constraints.Bounds.Left
+        let invader = Entity.updateXPos defaultInvader onNextMoveBeyondLeftBorder
+
+        let game = createGameWithInvasion [invader] Invasion.Direction.Down
+                   |> updateGame <| timeToMove - 1.
+
+        equal Invasion.Direction.Down game.Invasion.Direction

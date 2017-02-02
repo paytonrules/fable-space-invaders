@@ -53,28 +53,19 @@ type Entity  =  {
     Properties: EntityProperties;
 }
 
+module Entity = 
+    let updatePosition entity position = 
+        { entity with Position = position }
+
+    let updateXPos entity x = 
+        { entity with Position = { X = x; Y = entity.Position.Y } }
+
 type InvasionStep = {
     TimeToMove: Delta;
     SinceLastMove: Delta;
     Direction: Vector2;
 }
 
-module Invader = 
-    let create (position, invaderType) = 
-        { Position = position;
-          Bounds = { Width = 30; Height = 30 };
-          Properties = { InvaderState = Closed; 
-                         Type = invaderType} |> Invader};
-
-    let toggleState = function | Closed -> Open | Open -> Closed
-
-    let update (invader, invaderProps) invasion delta = 
-        if delta + invasion.SinceLastMove >= invasion.TimeToMove 
-        then 
-            let newPosition = Vector2.add invader.Position invasion.Direction  
-            let invaderProps = { invaderProps with InvaderState = toggleState invaderProps.InvaderState } |> Invader
-            { invader with Position = newPosition; Properties = invaderProps }
-        else invader
 
 type Entities = Entity list
 
@@ -105,6 +96,11 @@ module Invasion =
     let totalInvaders = columns * rows
     let initialTimeToMove = 1000.
 
+    module Direction = 
+        let Right = { X = 4.; Y = 0.}
+        let Down = { X = 0.; Y = 4. }
+        let Left = { X = -4.; Y = 0. }
+
     let invadersFrom entities = 
         entities |> List.filter ( fun entity -> 
                                     match entity.Properties with
@@ -126,6 +122,26 @@ module Invasion =
         if invaders |> List.isEmpty
         then { Right = 0.; Left = 0. }
         else { Right = rightBounds invaders; Left = leftBounds invaders }
+
+    let isTimeToMove invasion delta = 
+        delta + invasion.SinceLastMove >= invasion.TimeToMove 
+
+module Invader = 
+    let create (position, invaderType) = 
+        { Position = position;
+          Bounds = { Width = 30; Height = 30 };
+          Properties = { InvaderState = Closed; 
+                         Type = invaderType} |> Invader};
+
+    let toggleState = function | Closed -> Open | Open -> Closed
+
+    let update (invader, invaderProps) invasion delta = 
+        if Invasion.isTimeToMove invasion delta 
+        then 
+            let newPosition = Vector2.add invader.Position invasion.Direction  
+            let invaderProps = { invaderProps with InvaderState = toggleState invaderProps.InvaderState } |> Invader
+            { invader with Position = newPosition; Properties = invaderProps }
+        else invader
 
 module Laser = 
     let speedPerMillisecond = 0.200
@@ -271,9 +287,12 @@ let createGame entities =
         LastUpdate = 0.;
         Invasion = { TimeToMove = Invasion.initialTimeToMove; 
                      SinceLastMove = 0.; 
-                     Direction = { X = 4.0; Y = 0.0 } }
+                     Direction = Invasion.Direction.Right }
     }
 let initialGame = [ initialLaser ] @ initialInvaders |> createGame
+
+let updateInvasion game invasion = 
+    { game with Invasion = invasion }
 
 let updateEntities game delta = 
     { game with Entities = game.Entities |> List.map (fun entity -> 
@@ -289,22 +308,59 @@ let removeOffscreenBullet game =
     let isBulletOffScreen entity = isBullet entity && isPastTheTopOfTheScreen entity
     {game with Entities = List.filter (isBulletOffScreen >> not) game.Entities}
 
+let (|MovingRight|MovingDown|MovingLeft|) direction = 
+    if direction = Invasion.Direction.Right
+    then MovingRight
+    else if direction = Invasion.Direction.Left
+    then MovingLeft
+    else MovingDown
+
+let (|PastRightEdge|PastLeftEdge|WithinBounds|) entities = 
+    let bounds = Invasion.bounds entities
+    if bounds.Right >= float SpaceInvaders.Constraints.Bounds.Right 
+    then PastRightEdge
+    else if bounds.Left <= float SpaceInvaders.Constraints.Bounds.Left
+    then PastLeftEdge
+    else WithinBounds
+
+let nextInvasionDirection game = 
+    let updatedInvasion = 
+        match game.Entities with
+        | PastRightEdge ->
+            match game.Invasion.Direction with
+            | MovingRight -> { game.Invasion with Direction = Invasion.Direction.Down }
+            | MovingDown -> { game.Invasion with Direction = Invasion.Direction.Left }
+            | MovingLeft -> game.Invasion
+        | PastLeftEdge ->
+            match game.Invasion.Direction with
+            | MovingLeft -> { game.Invasion with Direction = Invasion.Direction.Down }
+            | MovingDown -> { game.Invasion with Direction = Invasion.Direction.Right }
+            | MovingRight -> game.Invasion
+        | WithinBounds -> game.Invasion
+
+    { game with Invasion = updatedInvasion }
+
+let updateInvasionDirection game delta =
+    if delta + game.Invasion.SinceLastMove >= game.Invasion.TimeToMove
+    then nextInvasionDirection game
+    else game
+
 let updateTimestamp game timeSinceGameStarted = 
     { game with LastUpdate = timeSinceGameStarted}
 
 let updateTimeSinceLastMove game delta = 
     match game.Invasion.SinceLastMove + delta with
     | sinceLastMove when sinceLastMove < game.Invasion.TimeToMove ->
-        { game with Invasion =
-                              { game.Invasion with SinceLastMove = sinceLastMove }}
+        updateInvasion game { game.Invasion with SinceLastMove = sinceLastMove }
     | _ -> 
-        { game with Invasion = { game.Invasion with SinceLastMove = 0. }}
+        updateInvasion game { game.Invasion with SinceLastMove = 0. }
 
 
 let updateGame game timeSinceGameStarted = 
     let delta = (timeSinceGameStarted - game.LastUpdate)
     updateEntities game delta
     |> removeOffscreenBullet
+    |> updateInvasionDirection <| delta
     |> updateTimeSinceLastMove <| delta
     |> updateTimestamp <| timeSinceGameStarted
 
