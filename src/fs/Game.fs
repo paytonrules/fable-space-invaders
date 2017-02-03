@@ -168,6 +168,10 @@ module Invasion =
 
         { game with Invasion = updatedInvasion }
 
+    let removeShotInvaders invaders bullet = 
+        invaders |> List.filter (fun invader -> 
+                                    not <| Entity.isOverlapping invader bullet)
+
 module Invader = 
 
     let bounds = function
@@ -361,6 +365,23 @@ let changeInvasionDirection game delta =
     then Invasion.nextInvasionDirection game
     else game
 
+let afterCollision game = 
+    let bullet = findBullet game.Entities
+    let laser = findLaser game.Entities
+    let invaders = Invasion.invadersFrom game.Entities
+    let newInvaders = match bullet with
+                      | None -> game.Entities
+                      | Some bullet -> 
+                        Invasion.removeShotInvaders invaders bullet
+
+    if List.length invaders = List.length newInvaders
+    then game
+    else match bullet with 
+         | None -> game
+         | Some bullet -> { game with Entities = match laser with
+                                                 | Some laser -> [laser] @ newInvaders 
+                                                 | None -> newInvaders }
+
 let updateTimestamp game timeSinceGameStarted = 
     { game with LastUpdate = timeSinceGameStarted}
 
@@ -375,11 +396,12 @@ let updateGame game timeSinceGameStarted =
     let delta = (timeSinceGameStarted - game.LastUpdate)
     updateEntities game delta
     |> removeOffscreenBullet
+    |> afterCollision
     |> changeInvasionDirection <| delta
     |> updateTimeSinceLastMove <| delta
     |> updateTimestamp <| timeSinceGameStarted
 
-let update (game:Game) (event:Event) = 
+let update game event = 
     match event with 
     | MoveLeft -> { game with Entities = Laser.pushLaserLeft game.Entities }
     | MoveRight -> { game with Entities = Laser.pushLaserRight game.Entities }

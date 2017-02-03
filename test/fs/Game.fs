@@ -276,6 +276,39 @@ module InvasionBounds =
 
         equal bounds.Left 5.
 
+module InvaderBulletCollision = 
+    let invaderProps = { InvaderState = Closed; Type = Small } |> Invader
+    let bulletProps = { Velocity = { X = 0.; Y = 0. }} |> Bullet
+    let defaultInvader = { Position = { X = 0.; Y = 0.};
+                           Bounds = { Width = 10; Height = 10 };
+                           Properties = invaderProps }
+
+    let defaultBullet = { Position = { X = 0.; Y = 0.};
+                          Bounds = { Width = 10; Height = 10 };
+                          Properties = bulletProps }
+     
+    [<Test>]
+    let ``invaders are unchanged when there the bullet doesn't collide`` () = 
+        let invader = { defaultInvader with Position = { X = 0.; Y = 0.} }
+        let bullet = { defaultBullet with Position = { X = 90.; Y = 0.} }
+       
+        let invaders = [invader] 
+
+        let updatedInvaders = Invasion.removeShotInvaders invaders bullet
+
+        equal updatedInvaders invaders
+
+    [<Test>]
+    let ``one invader is removed when the bullet intersects it`` () =
+        let invader = { defaultInvader with Position = { X = 0.; Y = 0.} }
+        let bullet = { defaultBullet with Position = { X = 1.; Y = 0.} }
+        
+        let invaders = [invader] 
+
+        let updatedInvaders = Invasion.removeShotInvaders invaders bullet
+
+        List.isEmpty updatedInvaders |> equal true
+
 
 module LaserTest = 
     let findLaser entities = 
@@ -514,6 +547,77 @@ module UpdateBullet =
         let updatedBullet = Bullet.update bullet delta
         
         equal { X = 10.5; Y = 10.5 } updatedBullet.Position
+
+[<TestFixture>]
+module BulletInvaderCollision = 
+
+    [<Test>]
+    let ``when the bullet doesn't collide with any invaders keep them all`` () = 
+        let invaderProperties = { Type = Small; InvaderState = Open } |> Invader
+        let invader = {
+            Position = { X = 0.; Y = 0. };
+            Bounds = { Width = 10; Height = 10 };
+            Properties = invaderProperties
+        }
+        let bulletProps = { Velocity = { X = 0.; Y = 0. } } |> Bullet
+        let bullet = {
+            Position = { X = 100.; Y = 100. }; 
+            Bounds = { Width = 10; Height = 10 };
+            Properties = bulletProps;
+        }
+        let game = createGame [invader; bullet]
+                   |> afterCollision
+
+        equal [invader; bullet] game.Entities
+    
+    [<Test>]
+    let ``when the bullet does collide with an invader remove the invader and the bullet`` () =
+        let invaderProperties = { Type = Small; InvaderState = Open } |> Invader
+        let invader = {
+            Position = { X = 0.; Y = 0. };
+            Bounds = { Width = 10; Height = 10 };
+            Properties = invaderProperties
+        }
+        let bulletProps = { Velocity = { X = 0.; Y = 0. } } |> Bullet
+        let bullet = {
+            Position = { X = 1.; Y = 1. }; 
+            Bounds = { Width = 10; Height = 10 };
+            Properties = bulletProps;
+        }
+        let game = createGame [invader; bullet]
+                   |> afterCollision
+
+        equal [] game.Entities
+
+    [<Test>]
+    let ``the laser is not included in collision dectection of bullets to invaders`` () =
+        let laserProperties = { RightForce = true; LeftForce = true } |> Laser
+        let laser = {
+            Position = { X = 0.; Y = 0. };
+            Bounds = { Width = 10; Height = 10 };
+            Properties = laserProperties
+        }
+        let invaderProperties = { Type = Small; InvaderState = Open } |> Invader
+        let invader = {
+            Position = { X = 0.; Y = 0. };
+            Bounds = { Width = 10; Height = 10 };
+            Properties = invaderProperties
+        }
+        let bulletProps = { Velocity = { X = 0.; Y = 0. } } |> Bullet
+        let bullet = {
+            Position = { X = 1.; Y = 1. }; 
+            Bounds = { Width = 10; Height = 10 };
+            Properties = bulletProps;
+        }
+        let game = createGame [laser; invader; bullet]
+                   |> afterCollision
+
+        equal [laser] game.Entities
+
+
+ 
+
+
 
 [<TestFixture>]
 module UpdateFunc = 
