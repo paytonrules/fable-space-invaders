@@ -560,15 +560,13 @@ module BulletInvaderCollision =
             Properties = invaderProperties
         }
         let bulletProps = { Velocity = { X = 0.; Y = 0. } } |> Bullet
-        let bullet = {
+        let bullet = Some {
             Position = { X = 100.; Y = 100. }; 
             Bounds = { Width = 10; Height = 10 };
             Properties = bulletProps;
         }
-        let game = createGame [invader; bullet]
-                   |> afterCollision
 
-        equal [invader; bullet] game.Entities
+        afterCollision bullet [invader] |> equal (bullet, [invader]) 
     
     [<Test>]
     let ``when the bullet does collide with an invader remove the invader and the bullet`` () =
@@ -579,45 +577,24 @@ module BulletInvaderCollision =
             Properties = invaderProperties
         }
         let bulletProps = { Velocity = { X = 0.; Y = 0. } } |> Bullet
-        let bullet = {
+        let bullet = Some {
             Position = { X = 1.; Y = 1. }; 
             Bounds = { Width = 10; Height = 10 };
             Properties = bulletProps;
         }
-        let game = createGame [invader; bullet]
-                   |> afterCollision
 
-        equal [] game.Entities
+        afterCollision bullet [invader] |> equal (None, []) 
 
     [<Test>]
-    let ``the laser is not included in collision dectection of bullets to invaders`` () =
-        let laserProperties = { RightForce = true; LeftForce = true } |> Laser
-        let laser = {
-            Position = { X = 0.; Y = 0. };
-            Bounds = { Width = 10; Height = 10 };
-            Properties = laserProperties
-        }
-        let invaderProperties = { Type = Small; InvaderState = Open } |> Invader
-        let invader = {
-            Position = { X = 0.; Y = 0. };
-            Bounds = { Width = 10; Height = 10 };
-            Properties = invaderProperties
-        }
+    let ``when the bullet is the only entity it does not remove itself (check only against invaders)`` () =
         let bulletProps = { Velocity = { X = 0.; Y = 0. } } |> Bullet
-        let bullet = {
+        let bullet = Some {
             Position = { X = 1.; Y = 1. }; 
             Bounds = { Width = 10; Height = 10 };
             Properties = bulletProps;
         }
-        let game = createGame [laser; invader; bullet]
-                   |> afterCollision
 
-        equal [laser] game.Entities
-
-
- 
-
-
+        afterCollision bullet [] |> equal (bullet, [])
 
 [<TestFixture>]
 module UpdateFunc = 
@@ -653,7 +630,8 @@ module UpdateFunc =
 
     [<Test>]
     let ``update the invasion step with the time since last move`` () =
-        let game = updateTimeSinceLastMove (createGame []) 3.
+        let invasion = { SinceLastMove = 3.; TimeToMove = 1000.; Direction = Invasion.Direction.Down }
+        let game = { createGame [] with Invasion = invasion }
 
         let updatedGame = updateGame game 2.
 
@@ -661,11 +639,10 @@ module UpdateFunc =
 
     [<Test>]
     let ``reset the invasion step time since last move after passing the time to move`` () =
-        let game = updateTimeSinceLastMove (createGame []) 1.
+        let invasion = { SinceLastMove = 1.; TimeToMove = 1000.; Direction = Invasion.Direction.Down }
+        let game = { (createGame []) with Invasion = invasion }
         
-        equal 1. game.Invasion.SinceLastMove
-
-        let updatedGame = updateGame game game.Invasion.TimeToMove
+        let updatedGame = updateGame game 1000.
 
         equal 0. updatedGame.Invasion.SinceLastMove
 

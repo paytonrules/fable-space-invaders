@@ -92,6 +92,7 @@ type Event =
 | Shoot
 | StopMoveLeft
 | StopMoveRight
+
 let clamp minMax value = 
     match value with
     | value when value < fst minMax -> fst minMax
@@ -151,22 +152,19 @@ module Invasion =
         then PastLeftEdge
         else WithinBounds
 
-    let nextInvasionDirection game = 
-        let updatedInvasion = 
-            match game.Entities with
-            | PastRightEdge ->
-                match game.Invasion.Direction with
-                | MovingRight -> { game.Invasion with Direction = Direction.Down }
-                | MovingDown -> { game.Invasion with Direction = Direction.Left }
-                | MovingLeft -> game.Invasion
-            | PastLeftEdge ->
-                match game.Invasion.Direction with
-                | MovingLeft -> { game.Invasion with Direction = Direction.Down }
-                | MovingDown -> { game.Invasion with Direction = Direction.Right }
-                | MovingRight -> game.Invasion
-            | WithinBounds -> game.Invasion
-
-        { game with Invasion = updatedInvasion }
+    let nextInvasionDirection invaders invasion = 
+        match invaders with
+        | PastRightEdge ->
+            match invasion.Direction with
+            | MovingRight -> { invasion with Direction = Direction.Down }
+            | MovingDown -> { invasion with Direction = Direction.Left }
+            | MovingLeft -> invasion
+        | PastLeftEdge ->
+            match invasion.Direction with
+            | MovingLeft -> { invasion with Direction = Direction.Down }
+            | MovingDown -> { invasion with Direction = Direction.Right }
+            | MovingRight -> invasion
+        | WithinBounds -> invasion
 
     let removeShotInvaders invaders bullet = 
         invaders |> List.filter (fun invader -> 
@@ -346,61 +344,61 @@ let initialGame = [ initialLaser ] @ initialInvaders |> createGame
 let updateInvasion game invasion = 
     { game with Invasion = invasion }
 
-let updateEntities game delta = 
-    { game with Entities = game.Entities |> List.map (fun entity -> 
-                                                        match entity.Properties with 
-                                                        | Laser _ -> Laser.update entity delta
-                                                        | Invader props -> Invader.update (entity, props) game.Invasion delta
-                                                        | Bullet _ -> Bullet.update entity delta) }
+let updateEntities entities invasion delta = 
+    entities |> List.map (fun entity -> 
+                            match entity.Properties with 
+                            | Laser _ -> Laser.update entity delta
+                            | Invader props -> Invader.update (entity, props) invasion delta
+                            | Bullet _ -> Bullet.update entity delta)
 
 let isPastTheTopOfTheScreen entity = 
     entity.Position.Y + (float entity.Bounds.Height) < (float SpaceInvaders.Constraints.Bounds.Top)
 
-let removeOffscreenBullet game = 
-    let isBulletOffScreen entity = isBullet entity && isPastTheTopOfTheScreen entity
-    {game with Entities = List.filter (isBulletOffScreen >> not) game.Entities}
+let removeOffscreenBullet bullet = 
+    match bullet with
+    | Some bullet when isPastTheTopOfTheScreen bullet -> None
+    | Some bullet -> Some bullet
+    | None -> None
 
-let changeInvasionDirection game delta =
-    if Invasion.isTimeToMove game.Invasion delta
-    then Invasion.nextInvasionDirection game
-    else game
+let changeInvasionDirection invaders invasion delta =
+    if Invasion.isTimeToMove invasion delta
+    then Invasion.nextInvasionDirection invaders invasion
+    else invasion
 
-let afterCollision game = 
-    let bullet = findBullet game.Entities
-    let laser = findLaser game.Entities
-    let invaders = Invasion.invadersFrom game.Entities
+let afterCollision bullet invaders = 
     let newInvaders = match bullet with
-                      | None -> game.Entities
+                      | None -> invaders
                       | Some bullet -> 
                         Invasion.removeShotInvaders invaders bullet
 
     if List.length invaders = List.length newInvaders
-    then game
-    else match bullet with 
-         | None -> game
-         | Some bullet -> { game with Entities = match laser with
-                                                 | Some laser -> [laser] @ newInvaders 
-                                                 | None -> newInvaders }
+    then (bullet, invaders)
+    else (None, newInvaders)
 
-let updateTimestamp game timeSinceGameStarted = 
-    { game with LastUpdate = timeSinceGameStarted}
-
-let updateTimeSinceLastMove game delta = 
-    match game.Invasion.SinceLastMove + delta with
-    | sinceLastMove when sinceLastMove < game.Invasion.TimeToMove ->
-        updateInvasion game { game.Invasion with SinceLastMove = sinceLastMove }
+let updateTimeSinceLastMove invasion delta = 
+    match invasion.SinceLastMove + delta with
+    | sinceLastMove when sinceLastMove < invasion.TimeToMove ->
+        { invasion with SinceLastMove = sinceLastMove }
     | _ -> 
-        updateInvasion game { game.Invasion with SinceLastMove = 0. }
+        { invasion with SinceLastMove = 0. }
 
 let updateGame game timeSinceGameStarted = 
     let delta = (timeSinceGameStarted - game.LastUpdate)
-    updateEntities game delta
-    |> removeOffscreenBullet
-    |> afterCollision
-    |> changeInvasionDirection <| delta
-    |> updateTimeSinceLastMove <| delta
-    |> updateTimestamp <| timeSinceGameStarted
+    let entities' = updateEntities game.Entities game.Invasion delta
+    let bullet = findBullet entities'
+    let invaders = Invasion.invadersFrom entities'
+    let laser = findLaser entities'
+    let bullet' = removeOffscreenBullet bullet
+    let (bullet'', invaders') = afterCollision bullet' invaders
+    let entities'' = List.map Some invaders' @ [bullet''] @ [laser] 
+                     |> List.choose id
 
+    let updatedGame' = { game with Entities = entities'' }
+
+    let invasion' = changeInvasionDirection (Invasion.invadersFrom updatedGame'.Entities) updatedGame'.Invasion delta
+    let invasion'' = updateTimeSinceLastMove invasion' delta
+    { updatedGame' with Invasion = invasion''; LastUpdate = timeSinceGameStarted}
+    
 let update game event = 
     match event with 
     | MoveLeft -> { game with Entities = Laser.pushLaserLeft game.Entities }
