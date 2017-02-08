@@ -20,3 +20,4 @@ obj/
 ## .paket
 .paket/paket.exe
 packages/
+*.exe
