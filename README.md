@@ -2,31 +2,32 @@ Space Invaders in F#/Fable
 =================
 
 This is an attempt to write Space Invaders for the web in F#. Why F#? Because I started this project in 
-ClojureScript and found that I really missed static typing. 
+ClojureScript and found that I really missed static typing. Fable (fable.io) is a transpiler to go from 
+F# to JavaScript. It's working reasonably well despite not being at 1.0 as of this writing.
 
 This project was initially setup using the template here: https://github.com/fable-compiler/fable-getting-started. 
 
-Much of the readme has language from the getting started, because it's not wrong, it just sounds a little strange.
-
-Setup
+Prerequisites
 ======================
 
-After cloning the repo you'll need to install depedencies. 
+Node.js is required for transpiling to JavaScript, and Yarn for managing JavaScript dependencies and 
+Fable plugins. It's important to understand that most Nuget packages are not compatible out of the box
+with Fable, because they have dependencies on the system. There are many Fable plugins in npm to address
+missing packages, such as a plugin for writing NUnit tests, and those are installed with yarn 
+not Paket or Nuget. This can be confusing, which is why I'm belaboring the point.
 
 Make sure that you have [`node`](https://nodejs.org/) and
 [`yarn`](https://yarnpkg.com/) installed. 
 
 You can get [`yarn`](https://yarnpkg.com/) from
 [its website](https://yarnpkg.com/en/docs/install). On a mac you can use homebrew.
-```
 
-**Note:** Fable works with either `npm` or `yarn`. This repository uses `yarn`
-because it has [several advantages over `npm`](https://yarnpkg.com/) (and because it's what the quickstart used).
-
-----
+Setup
+======================
 
 Now you must use [`yarn install`](https://yarnpkg.com/en/docs/cli/install),
-which will download all of the necessary dependencies for the project.
+which will download all of the necessary dependencies for the project. This will install the Fable
+compiler and other dependencies.
 
 After the dependencies are downloaded, it will then automatically compile the
 project.
@@ -36,10 +37,9 @@ which is exactly the same as [`yarn install`](https://yarnpkg.com/en/docs/cli/in
 
 You do not need to install [Fable](http://fable.io/) globally:
 [Fable](http://fable.io/) will be installed locally inside of the
-`node_modules` folder. This makes it easier for other people to contribute to
-your project because they do not need to install [Fable](http://fable.io/)
-globally, and it also guarantees that everybody is compiling your project with
+`node_modules` folder. This makes guarantees that everybody is compiling the project with
 the correct version of [Fable](http://fable.io/).
+
 
 Compilation
 ===========================
@@ -70,6 +70,33 @@ project's files. This is much faster than using
 [`yarn test`](https://yarnpkg.com/en/docs/cli/test)
 
 This will also build the main app, so you really don't need to run watch on the tests and the app simultaneously.
+
+Property Based Testing
+=========================================
+
+FSCheck tests are being written to test the platform independent code. The way this works is that
+the propertyTests directory has an .fsx script that references .fs files directly rather than using 
+the project file. While clunky this means that the Fable dependent code isn't included.
+
+Given that most Fable users actually use a script/webpack based approach I'm sticking to this for now, 
+as I may remove the project files at a later date. I may also create two new projects, one with 
+the platform independent bits and one with the fscheck files. For now it is what it is.
+
+Please note I've made no effort to make this work on Windows, there is no build.bat. PR's welcome.
+
+First start by running:
+
+```
+$ ./build.sh
+```
+
+This will use paket (a .Net package manager) to install FAKE and FsCheck, then run the Fake build 
+with the default task.
+
+
+
+
+
 
 Viewing The Game
 =========================================
