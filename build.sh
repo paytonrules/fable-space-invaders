@@ -1,4 +1,5 @@
-# use mono
+#!/usr/bin/env bash
+
 mono .paket/paket.bootstrapper.exe
 exit_code=$?
 if [ $exit_code -ne 0 ]; then
