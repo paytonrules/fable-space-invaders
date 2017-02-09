@@ -21,3 +21,6 @@ obj/
 .paket/paket.exe
 packages/
 *.exe
+
+## .fake
+.fake/
