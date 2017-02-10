@@ -2,6 +2,7 @@
 #r "FAKE/tools/FakeLib.dll"
 
 open Fake
+open Fake.Testing
 
 Target "Clean" (fun _ -> 
     CleanDirs ["src/bin"; "src/obj"; "test/bin"; "test/obj";
@@ -16,9 +17,10 @@ Target "Test" (fun _ ->
     Shell.Exec("yarn", "test") |> ignore
 )
 
-"Clean"
-    ==> "Main"
-    ==> "Test"
-    ==> "RebuildAll"
+Target "QuickTest" (fun _ -> 
+    let testDir = "propertyTests/PropertyTests/bin/Debug/"
+    !! (testDir @@ "PropertyTests.dll")
+    |> xUnit2 (fun p -> {p with HtmlOutputPath = Some(testDir @@ "html")})
+)
 
-RunTargetOrDefault "RebuildAll"
+RunTargetOrDefault "Main"

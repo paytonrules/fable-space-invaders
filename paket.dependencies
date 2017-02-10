@@ -1,4 +1,7 @@
 source https://nuget.org/api/v2
 
+nuget xunit
+nuget xunit.runner.console
 nuget FSCheck.Xunit
 nuget FAKE
+nuget FSharp.Core

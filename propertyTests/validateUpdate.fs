@@ -1,18 +1,7 @@
-﻿
-#I @"../packages/"
-#load @"../src/fs/Constraints.fs"
-#load @"../src/fs/Game.fs"
-#r "FsCheck/lib/net45/FsCheck.dll"
-
-#r "xunit.extensibility.core/lib/portable-net45+win8+wp8+wpa81/xunit.core.dll"
-#r "xunit.abstractions/lib/portable-net45+win+wpa81+wp80+monotouch+monoandroid+Xamarin.iOS/xunit.abstractions.dll"
-#r "FsCheck.Xunit/lib/net45/FsCheck.Xunit.dll"
-
-open SpaceInvaders.Game
+﻿open SpaceInvaders.Game
 open FsCheck
 open System
 open FsCheck.Xunit
-
 
 
 module Diamond = 
