@@ -8,4 +8,17 @@ Target "Clean" (fun _ ->
                 "dist/umd"; "dist/test"]
 )
 
-RunTargetOrDefault "Clean"
+Target "Main" (fun _ ->
+    Shell.Exec "yarn" |> ignore
+)
+
+Target "Test" (fun _ -> 
+    Shell.Exec("yarn", "test") |> ignore
+)
+
+"Clean"
+    ==> "Main"
+    ==> "Test"
+    ==> "RebuildAll"
+
+RunTargetOrDefault "RebuildAll"
