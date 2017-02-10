@@ -2,7 +2,10 @@
   "sourceMaps": true,
   "targets": {
     "umd": {
-      "projFile": "./src/Main.fsproj",
+      "projFile": [
+        "./src/Game.fsproj",
+        "./src/Main.fsproj"
+      ],
       "rollup": {
         "dest": "./dist/umd/Main.js",
         "format": "umd"
@@ -10,6 +13,7 @@
     },
     "test": {
       "projFile": [
+        "./src/Game.fsproj",
         "./src/Main.fsproj",
         "./test/Test.fsproj"
       ],

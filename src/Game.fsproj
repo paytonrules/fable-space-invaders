@@ -6,31 +6,15 @@
    !  The GUID must be upper-case, and it must be wrapped in {}
    !-->
   <PropertyGroup>
-    <ProjectGuid>{EFB3DFD6-9C92-4D7D-934B-CDC335A530C3}</ProjectGuid>
+    <ProjectGuid>{6D305F83-8A94-4EAB-9B22-28FBD55D1651}</ProjectGuid>
   </PropertyGroup>
-  <!--
-   !  These are Fable libraries that you are using in your project.
-   !  They must start with ./ so Fable knows that they're relative paths.
-   !-->
-  <ItemGroup>
-    <Reference Include="../node_modules/fable-core/Fable.Core.dll"/>
-    <Reference Include="../node_modules/fable-powerpack/Fable.PowerPack.dll"/>
-    <ProjectReference Include="./Game.fsproj">
-      <Project>{6D305F83-8A94-4EAB-9B22-28FBD55D1651}</Project>
-      <Name>Game</Name>
-    </ProjectReference>
-  </ItemGroup>
   <!--
    !  These are the F# files that are a part of your project.
    !  File order is important in F#. Files cannot depend on anything below them.
    !-->
   <ItemGroup>
-    <Compile Include="fs/Image.fs"/>
-    <Compile Include="fs/Window.fs"/>
-    <Compile Include="fs/Presentation.fs"/>
-    <Compile Include="fs/GameLoop.fs"/>
-    <Compile Include="fs/EventMapping.fs"/>
-    <Compile Include="fs/Main.fs"/>
+    <Compile Include="fs/Constraints.fs"/>
+    <Compile Include="fs/Game.fs"/>
   </ItemGroup>
   <!-- DO NOT EDIT BELOW THIS POINT UNLESS YOU KNOW WHAT YOU'RE DOING -->
   <PropertyGroup>
