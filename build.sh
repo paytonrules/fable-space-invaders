@@ -1,16 +1,33 @@
-#!/usr/bin/env bash
+#!/bin/bash
+if test "$OS" = "Windows_NT"
+then
+  # use .Net
 
-mono .paket/paket.bootstrapper.exe
-exit_code=$?
-if [ $exit_code -ne 0 ]; then
-  exit $exit_code
+  .paket/paket.bootstrapper.exe
+  exit_code=$?
+  if [ $exit_code -ne 0 ]; then
+  	exit $exit_code
+  fi
+
+  .paket/paket.exe restore
+  exit_code=$?
+  if [ $exit_code -ne 0 ]; then
+  	exit $exit_code
+  fi
+
+  packages/FAKE/tools/FAKE.exe $@ --fsiargs build.fsx
+else
+  # use mono
+  mono .paket/paket.bootstrapper.exe
+  exit_code=$?
+  if [ $exit_code -ne 0 ]; then
+  	exit $exit_code
+  fi
+
+  mono .paket/paket.exe restore
+  exit_code=$?
+  if [ $exit_code -ne 0 ]; then
+  	exit $exit_code
+  fi
+  mono packages/FAKE/tools/FAKE.exe $@ --fsiargs -d:MONO build.fsx
 fi
-
-mono .paket/paket.exe restore
-exit_code=$?
-if [ $exit_code -ne 0 ]; then
-  exit $exit_code
-fi
-
-[ ! -e build.fsx ] && mono .paket/paket.exe update
-mono packages/FAKE/tools/FAKE.exe $@ --fsiargs -d:MONO build.fsx
