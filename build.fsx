@@ -17,8 +17,13 @@ Target "Test" (fun _ ->
     Shell.Exec("yarn", "test") |> ignore
 )
 
-Target "QuickTest" (fun _ -> 
-    let testDir = "propertyTests/PropertyTests/bin/Debug/"
+Target "BuildPropertyTests" (fun _ -> 
+    MSBuildDebug "./PropertyTests/build" "Build" ["./PropertyTests/PropertyTests.fsproj"]
+    |> Log "AppBuild-Output: "
+)
+
+Target "RunPropertyTests" (fun _ -> 
+    let testDir = "./PropertyTests/build/"
     !! (testDir @@ "PropertyTests.dll")
     |> xUnit2 (fun p -> {p with HtmlOutputPath = Some(testDir @@ "html")})
 )
