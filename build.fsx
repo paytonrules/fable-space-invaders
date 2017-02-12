@@ -6,7 +6,8 @@ open Fake.Testing
 
 Target "Clean" (fun _ -> 
     CleanDirs ["src/bin"; "src/obj"; "test/bin"; "test/obj";
-                "dist/umd"; "dist/test"]
+                "dist/umd"; "dist/test"; "PropertyTests/bin"; 
+                "PropertyTests/build"]
 )
 
 Target "Main" (fun _ ->
@@ -27,5 +28,8 @@ Target "RunPropertyTests" (fun _ ->
     !! (testDir @@ "PropertyTests.dll")
     |> xUnit2 (fun p -> {p with HtmlOutputPath = Some(testDir @@ "html")})
 )
+
+"BuildPropertyTests"
+==> "RunPropertyTests"
 
 RunTargetOrDefault "Main"
