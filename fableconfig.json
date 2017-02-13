@@ -3,7 +3,7 @@
   "targets": {
     "umd": {
       "projFile": [
-        "./src/Game.fsproj",
+        "./SpaceInvaders/SpaceInvaders.fsproj",
         "./src/Main.fsproj"
       ],
       "rollup": {
@@ -13,7 +13,7 @@
     },
     "test": {
       "projFile": [
-        "./src/Game.fsproj",
+        "./SpaceInvaders/SpaceInvaders.fsproj",
         "./src/Main.fsproj",
         "./test/Test.fsproj"
       ],

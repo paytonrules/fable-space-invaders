@@ -15,9 +15,9 @@
   <ItemGroup>
     <Reference Include="../node_modules/fable-core/Fable.Core.dll"/>
     <Reference Include="../node_modules/fable-powerpack/Fable.PowerPack.dll"/>
-    <ProjectReference Include="./Game.fsproj">
-      <Project>{6D305F83-8A94-4EAB-9B22-28FBD55D1651}</Project>
-      <Name>Game</Name>
+    <ProjectReference Include="../SpaceInvaders/SpaceInvaders.fsproj">
+      <Project>{C8152C89-3216-40CF-91A6-E88DA89E6548}</Project>
+      <Name>SpaceInvaders</Name>
     </ProjectReference>
   </ItemGroup>
   <!--
@@ -25,11 +25,8 @@
    !  File order is important in F#. Files cannot depend on anything below them.
    !-->
   <ItemGroup>
-    <Compile Include="fs/Image.fs"/>
     <Compile Include="fs/Window.fs"/>
     <Compile Include="fs/Presentation.fs"/>
-    <Compile Include="fs/GameLoop.fs"/>
-    <Compile Include="fs/EventMapping.fs"/>
     <Compile Include="fs/Main.fs"/>
   </ItemGroup>
   <!-- DO NOT EDIT BELOW THIS POINT UNLESS YOU KNOW WHAT YOU'RE DOING -->

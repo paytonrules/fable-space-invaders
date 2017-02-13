@@ -6,7 +6,7 @@
    !  The GUID must be upper-case, and it must be wrapped in {}
    !-->
   <PropertyGroup>
-    <ProjectGuid>{6D305F83-8A94-4EAB-9B22-28FBD55D1651}</ProjectGuid>
+    <ProjectGuid>{C8152C89-3216-40CF-91A6-E88DA89E6548}</ProjectGuid>
   </PropertyGroup>
   <!--
    !  These are the F# files that are a part of your project.
@@ -15,6 +15,9 @@
   <ItemGroup>
     <Compile Include="fs/Constraints.fs"/>
     <Compile Include="fs/Game.fs"/>
+    <Compile Include="fs/Image.fs" />
+    <Compile Include="fs/GameLoop.fs"/>
+    <Compile Include="fs/EventMapping.fs"/>
   </ItemGroup>
   <!-- DO NOT EDIT BELOW THIS POINT UNLESS YOU KNOW WHAT YOU'RE DOING -->
   <PropertyGroup>
@@ -52,3 +55,4 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')"/>
 </Project>
+

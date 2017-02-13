@@ -5,9 +5,9 @@ open Fake
 open Fake.Testing
 
 Target "Clean" (fun _ -> 
-    CleanDirs ["src/bin"; "src/obj"; "test/bin"; "test/obj";
+    CleanDirs [".fake"; "src/bin"; "src/obj"; "test/bin"; "test/obj";
                 "dist/umd"; "dist/test"; "PropertyTests/bin"; 
-                "PropertyTests/build"]
+                "PropertyTests/build"; "PropertyTests/obj"]
 )
 
 Target "Main" (fun _ ->

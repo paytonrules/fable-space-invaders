@@ -43,7 +43,7 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../src/Game.fsproj">
+    <ProjectReference Include="../SpaceInvaders/SpaceInvaders.fsproj">
       <Name>Game.fsproj</Name>
       <Project>{6d305f83-8a94-4eab-9b22-28fbd55d1651}</Project>
     </ProjectReference>
