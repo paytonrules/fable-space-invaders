@@ -25,4 +25,4 @@ packages/
 ## .fake
 .fake/
 
-PropertyTests/build
+PropertyTest/build

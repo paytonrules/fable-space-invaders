@@ -18,18 +18,18 @@ Target "Test" (fun _ ->
     Shell.Exec("yarn", "test") |> ignore
 )
 
-Target "BuildPropertyTests" (fun _ -> 
-    MSBuildDebug "./PropertyTests/build" "Build" ["./PropertyTests/PropertyTests.fsproj"]
+Target "BuildPropertyTest" (fun _ -> 
+    MSBuildDebug "./PropertyTest/build" "Build" ["./PropertyTest/PropertyTest.fsproj"]
     |> Log "AppBuild-Output: "
 )
 
-Target "RunPropertyTests" (fun _ -> 
-    let testDir = "./PropertyTests/build/"
+Target "PropertyTest" (fun _ -> 
+    let testDir = "./PropertyTest/build/"
     !! (testDir @@ "PropertyTests.dll")
     |> xUnit2 (fun p -> {p with HtmlOutputPath = Some(testDir @@ "html")})
 )
 
-"BuildPropertyTests"
-==> "RunPropertyTests"
+"BuildPropertyTest"
+==> "PropertyTest"
 
 RunTargetOrDefault "Main"
