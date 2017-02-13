@@ -5,9 +5,10 @@ open Fake
 open Fake.Testing
 
 Target "Clean" (fun _ -> 
-    CleanDirs [".fake"; "src/bin"; "src/obj"; "test/bin"; "test/obj";
-                "dist/umd"; "dist/test"; "PropertyTests/bin"; 
-                "PropertyTests/build"; "PropertyTests/obj"]
+    CleanDirs [".fake"; "SpaceInvaders/bin"; "SpacceInvaders/obj"; 
+                "UnitTest/bin"; "UnitTest/obj";
+                "dist/umd"; "dist/test"; "PropertyTest/bin"; 
+                "PropertyTest/build"; "PropertyTest/obj"]
 )
 
 Target "Browser" (fun _ ->
