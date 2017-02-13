@@ -15,14 +15,14 @@
       "projFile": [
         "./SpaceInvaders/SpaceInvaders.fsproj",
         "./Browser/Browser.fsproj",
-        "./test/Test.fsproj"
+        "./UnitTest/UnitTest.fsproj"
       ],
       "outDir": "./dist/test",
       "module": "commonjs",
       "coreLib": "fable-core/umd",
       "plugins": ["./node_modules/fable-plugins-nunit/Fable.Plugins.NUnit.dll"],
       "scripts": {
-        "postbuild": "mocha --reporter spec --colors --sort --recursive ./dist/test/test/fs"
+        "postbuild": "mocha --reporter spec --colors --sort --recursive ./dist/test/UnitTest/fs"
       }
     }
   }
