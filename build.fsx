@@ -10,7 +10,7 @@ Target "Clean" (fun _ ->
                 "PropertyTests/build"; "PropertyTests/obj"]
 )
 
-Target "Main" (fun _ ->
+Target "Browser" (fun _ ->
     Shell.Exec "yarn" |> ignore
 )
 

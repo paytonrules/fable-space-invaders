@@ -4,7 +4,7 @@
     "umd": {
       "projFile": [
         "./SpaceInvaders/SpaceInvaders.fsproj",
-        "./src/Main.fsproj"
+        "./Browser/Browser.fsproj"
       ],
       "rollup": {
         "dest": "./dist/umd/Main.js",
@@ -14,7 +14,7 @@
     "test": {
       "projFile": [
         "./SpaceInvaders/SpaceInvaders.fsproj",
-        "./src/Main.fsproj",
+        "./Browser/Browser.fsproj",
         "./test/Test.fsproj"
       ],
       "outDir": "./dist/test",
