@@ -35,11 +35,11 @@ let main() =
 
     let eventHandler = createGameEventHandler (mapEvents update) initialGame
 
-    document.addEventListener_keydown(fun e -> 
+    document.addEventListener_keydown(fun e ->
         eventHandler ({key = e.keyCode } |> KeyDown) |> ignore
         null)
 
-    document.addEventListener_keyup(fun e -> 
+    document.addEventListener_keyup(fun e ->
         eventHandler ({key = e.keyCode } |> KeyUp) |> ignore
         null)
 

@@ -4,7 +4,7 @@ open Fable.Core.Testing
 open SpaceInvaders.Game
 
 [<TestFixture>]
-module EntityIntersection = 
+module EntityIntersection =
     let laser = { RightForce = true; LeftForce = true } |> Laser
 
     let cases = [
@@ -22,9 +22,9 @@ module EntityIntersection =
         ({ X = 0.; Y = 11. }, { X = 0.; Y = 0. }, false);
     ]
     [<Test>]
-    let ``entity intersection, data driven test`` () = 
+    let ``entity intersection, data driven test`` () =
 
-        cases |> List.iter (fun (firstBox, secondBox, expects) -> 
+        cases |> List.iter (fun (firstBox, secondBox, expects) ->
             let firstBox = {
                 Position = firstBox;
                 Bounds = { Width = 10; Height = 10 };
@@ -37,7 +37,7 @@ module EntityIntersection =
                 Properties = laser
             }
 
-            Entity.isOverlapping firstBox secondBox |> equal expects) 
+            Entity.isOverlapping firstBox secondBox |> equal expects)
 
 [<TestFixture>]
 module InitialInvaderPositioning =
@@ -48,8 +48,8 @@ module InitialInvaderPositioning =
         equal firstInvader.Position invasionUpperLeftCorner
 
     [<Test>]
-    let ``it puts the next invader the width of the invader to the right`` () = 
-        let secondInvader = List.item 1 initialInvaders 
+    let ``it puts the next invader the width of the invader to the right`` () =
+        let secondInvader = List.item 1 initialInvaders
 
         let secondPosition = Vector2.add invasionUpperLeftCorner { X = Invasion.columnWidth; Y = 0. }
         equal secondInvader.Position secondPosition
@@ -71,7 +71,7 @@ module InitialInvaderPositioning =
 
         equal rowTwoInvader.Position rowTwoPosition
 
-    let sliceInvaderList list (start, slice) = 
+    let sliceInvaderList list (start, slice) =
         list
         |> Seq.skip start
         |> Seq.take slice
@@ -79,15 +79,15 @@ module InitialInvaderPositioning =
 
     let sliceInitialInvaders = sliceInvaderList initialInvaders
 
-    let assertAllInvaders invaders ofType = 
+    let assertAllInvaders invaders ofType =
         invaders
-        |> List.forall (fun entity -> 
+        |> List.forall (fun entity ->
                         match entity.Properties with
-                        | Invader e -> e.Type = ofType 
-                        | _ -> false) 
-        |> equal true 
+                        | Invader e -> e.Type = ofType
+                        | _ -> false)
+        |> equal true
 
-        
+
     [<Test>]
     let ``the first two rows are small invaders`` () =
         let firstTwoRows = sliceInitialInvaders (0, Invasion.columns * 2)
@@ -121,7 +121,7 @@ module InvasionMovement =
     [<Test>]
     let ``if it is not time to move, because delta is smaller than the SinceLastMove, TimeToMove gap, do not move`` () =
         let updatedInvader = Invader.update (invader, invaderProperties)
-                                { TimeToMove = 1.0; 
+                                { TimeToMove = 1.0;
                                   SinceLastMove = 0.0;
                                   Direction = { X = 1.0; Y = 0.0 } }
                                 0.99
@@ -131,17 +131,17 @@ module InvasionMovement =
     [<Test>]
     let ``move when it is time to move`` () =
         let updatedInvader = Invader.update (invader, invaderProperties)
-                                { TimeToMove = 1.0; 
+                                { TimeToMove = 1.0;
                                   SinceLastMove = 0.0;
                                   Direction = { X = 1.0; Y = 0.0 }}
                                 1.0
 
         equal (invader.Position.X + 1.0) updatedInvader.Position.X
- 
+
     [<Test>]
     let ``move when it is past time to move`` () =
         let updatedInvader = Invader.update (invader, invaderProperties)
-                                { TimeToMove = 1.0; 
+                                { TimeToMove = 1.0;
                                   SinceLastMove = 0.0;
                                   Direction = { X = 1.0; Y = 0.0 }}
                                 1.1
@@ -151,7 +151,7 @@ module InvasionMovement =
     [<Test>]
     let ``SinceLastMove accumulates, use delta + SinceLastMove to see if it is time to move`` () =
         let updatedInvader = Invader.update (invader, invaderProperties)
-                                { TimeToMove = 1.0; 
+                                { TimeToMove = 1.0;
                                   SinceLastMove = 0.9;
                                   Direction = { X = 1.0; Y = 0.0 }}
                                 0.1
@@ -161,11 +161,11 @@ module InvasionMovement =
     [<Test>]
     let ``Close the invader when it is Open (the default) and it is time to move`` () =
         let updatedInvader = Invader.update (invader, invaderProperties)
-                                { TimeToMove = 1.0; 
+                                { TimeToMove = 1.0;
                                   SinceLastMove = 0.0;
                                   Direction = { X = 1.0; Y = 0.0 }}
                                 1.1
-        
+
         match updatedInvader.Properties with
         | Invader props -> equal props.InvaderState Closed |> ignore
         | _ -> failwith "the entity was not an invader"
@@ -174,11 +174,11 @@ module InvasionMovement =
     let ``Open the invader when it is Closed and it is time to move`` () =
         let closedInvader = { invaderProperties with InvaderState = Closed }
         let updatedInvader = Invader.update (invader, closedInvader)
-                                { TimeToMove = 1.0; 
+                                { TimeToMove = 1.0;
                                   SinceLastMove = 0.0;
                                   Direction = { X = 1.0; Y = 0.0 }}
                                 1.1
-        
+
         match updatedInvader.Properties with
         | Invader props -> equal props.InvaderState Open |> ignore
         | _ -> failwith "the entity was not an invader"
@@ -232,7 +232,7 @@ module InvasionBounds =
         equal bounds.Right 10.
 
     [<Test>]
-    let ``Left is 0 when there are no entities`` () = 
+    let ``Left is 0 when there are no entities`` () =
         let bounds = Invasion.bounds []
 
         equal bounds.Left 0.
@@ -247,7 +247,7 @@ module InvasionBounds =
         }
         let bounds = Invasion.bounds [invader]
 
-        equal bounds.Left 5. 
+        equal bounds.Left 5.
 
     [<Test>]
     let ``With many invaders use the invader farthest to the left`` () =
@@ -276,7 +276,7 @@ module InvasionBounds =
 
         equal bounds.Left 5.
 
-module InvaderBulletCollision = 
+module InvaderBulletCollision =
     let invaderProps = { InvaderState = Closed; Type = Small } |> Invader
     let bulletProps = { Velocity = { X = 0.; Y = 0. }} |> Bullet
     let defaultInvader = { Position = { X = 0.; Y = 0.};
@@ -286,13 +286,13 @@ module InvaderBulletCollision =
     let defaultBullet = { Position = { X = 0.; Y = 0.};
                           Bounds = { Width = 10; Height = 10 };
                           Properties = bulletProps }
-     
+
     [<Test>]
-    let ``invaders are unchanged when there the bullet doesn't collide`` () = 
+    let ``invaders are unchanged when there the bullet doesn't collide`` () =
         let invader = { defaultInvader with Position = { X = 0.; Y = 0.} }
         let bullet = { defaultBullet with Position = { X = 90.; Y = 0.} }
-       
-        let invaders = [invader] 
+
+        let invaders = [invader]
 
         let updatedInvaders = Invasion.removeShotInvaders invaders bullet
 
@@ -302,23 +302,23 @@ module InvaderBulletCollision =
     let ``one invader is removed when the bullet intersects it`` () =
         let invader = { defaultInvader with Position = { X = 0.; Y = 0.} }
         let bullet = { defaultBullet with Position = { X = 1.; Y = 0.} }
-        
-        let invaders = [invader] 
+
+        let invaders = [invader]
 
         let updatedInvaders = Invasion.removeShotInvaders invaders bullet
 
         List.isEmpty updatedInvaders |> equal true
 
 
-module LaserTest = 
-    let findLaser entities = 
+module LaserTest =
+    let findLaser entities =
         match SpaceInvaders.Game.findLaser entities with
         | Some laser -> laser
         | None -> failwith "No Laser Found"
-        
+
     let findLaserProperties entities =
         let laser = findLaser entities
-        match laser.Properties with 
+        match laser.Properties with
         | Laser props -> props
         | _ -> failwith "Laser did not have laser properties which is impossible"
 
@@ -410,9 +410,9 @@ module UpdatingLaser =
     let ``account for delta when moving the laser`` () =
         let properties = { RightForce = true; LeftForce = false } |> Laser
         let rightForceLaser = Laser.updateProperties laser properties
-        
+
         let game = { createGame [rightForceLaser] with LastUpdate = 1.}
-                   
+
         let updateEvent = Event.Update 3.
         let updatedGame = update game updateEvent
 
@@ -420,7 +420,7 @@ module UpdatingLaser =
         equal newLaser.Position.X (rightForceLaser.Position.X + (2. * Laser.speedPerMillisecond))
 
     [<Test>]
-    let ``update a laser with left force, move to the left`` () = 
+    let ``update a laser with left force, move to the left`` () =
         let laserProperties = { RightForce = false; LeftForce = true } |> Laser
         let leftForceLaser = Laser.updateProperties laser laserProperties
 
@@ -433,7 +433,7 @@ module UpdatingLaser =
         equal newLaser.Position.X (leftForceLaser.Position.X - (2. * Laser.speedPerMillisecond))
 
     [<Test>]
-    let ``update a laser with both forces, go nowhere`` () = 
+    let ``update a laser with both forces, go nowhere`` () =
         let laserProperties = { RightForce = true; LeftForce = true } |> Laser
         let stuckLaser = Laser.updateProperties laser laserProperties
 
@@ -451,7 +451,7 @@ module UpdatingLaser =
         let leftPosition = { laser.Position with X = SpaceInvaders.Constraints.Bounds.Left |> float }
         let leftLaser = { laser with Position = leftPosition }
                         |> Laser.updateProperties <| laserProperties
-        
+
         let game = createGame [leftLaser]
         let updateEvent = Event.Update 3.
         let updatedGame = update game updateEvent
@@ -464,11 +464,11 @@ module UpdatingLaser =
         let laserProperties = { LeftForce = false; RightForce = true } |> Laser
         let rightEdge = SpaceInvaders.Constraints.Bounds.Right - laser.Bounds.Width
         let rightPosition = { laser.Position with X = rightEdge |> float }
-        let laserAtRightBorder = { laser with Position = rightPosition }  
+        let laserAtRightBorder = { laser with Position = rightPosition }
                                  |> Laser.updateProperties <| laserProperties
-       
+
         let game = createGame [laserAtRightBorder]
-        let updateEvent = Event.Update 3. 
+        let updateEvent = Event.Update 3.
         let updatedGame = update game updateEvent
 
         let newLaser = LaserTest.findLaser updatedGame.Entities
@@ -485,8 +485,8 @@ module ShootBullets =
 
     let game = createGame [requiredLaser]
 
-    let findBullet entities = 
-        let bullet = SpaceInvaders.Game.findBullet entities 
+    let findBullet entities =
+        let bullet = SpaceInvaders.Game.findBullet entities
         match bullet with
         | None -> failwith "bullet not found"
         | Some bullet -> bullet
@@ -501,7 +501,7 @@ module ShootBullets =
 
     [<Test>]
     let ``a second bullet is not created if a bullet is present`` () =
-        let firstGame = update game Shoot 
+        let firstGame = update game Shoot
         let secondGame = update firstGame Shoot
 
         let bulletCount  = secondGame.Entities
@@ -525,7 +525,7 @@ module ShootBullets =
         equal expectedBulletPosition bullet.Position |> ignore
 
 [<TestFixture>]
-module UpdateBullet = 
+module UpdateBullet =
     [<Test>]
     let ``a bullet goes up the velocity each update`` () =
         let position = { X = 10.; Y = 10. }
@@ -534,7 +534,7 @@ module UpdateBullet =
         let delta = 1.
 
         let updatedBullet = Bullet.update bullet delta
-        
+
         equal { X = 11.; Y = 11. } updatedBullet.Position
 
     [<Test>]
@@ -545,14 +545,14 @@ module UpdateBullet =
         let delta = 0.5
 
         let updatedBullet = Bullet.update bullet delta
-        
+
         equal { X = 10.5; Y = 10.5 } updatedBullet.Position
 
 [<TestFixture>]
-module BulletInvaderCollision = 
+module BulletInvaderCollision =
 
     [<Test>]
-    let ``when the bullet doesn't collide with any invaders keep them all`` () = 
+    let ``when the bullet doesn't collide with any invaders keep them all`` () =
         let invaderProperties = { Type = Small; InvaderState = Open } |> Invader
         let invader = {
             Position = { X = 0.; Y = 0. };
@@ -561,13 +561,13 @@ module BulletInvaderCollision =
         }
         let bulletProps = { Velocity = { X = 0.; Y = 0. } } |> Bullet
         let bullet = Some {
-            Position = { X = 100.; Y = 100. }; 
+            Position = { X = 100.; Y = 100. };
             Bounds = { Width = 10; Height = 10 };
             Properties = bulletProps;
         }
 
-        afterCollision bullet [invader] |> equal (bullet, [invader]) 
-    
+        afterCollision bullet [invader] |> equal (bullet, [invader])
+
     [<Test>]
     let ``when the bullet does collide with an invader remove the invader and the bullet`` () =
         let invaderProperties = { Type = Small; InvaderState = Open } |> Invader
@@ -578,18 +578,18 @@ module BulletInvaderCollision =
         }
         let bulletProps = { Velocity = { X = 0.; Y = 0. } } |> Bullet
         let bullet = Some {
-            Position = { X = 1.; Y = 1. }; 
+            Position = { X = 1.; Y = 1. };
             Bounds = { Width = 10; Height = 10 };
             Properties = bulletProps;
         }
 
-        afterCollision bullet [invader] |> equal (None, []) 
+        afterCollision bullet [invader] |> equal (None, [])
 
     [<Test>]
     let ``when the bullet is the only entity it does not remove itself (check only against invaders)`` () =
         let bulletProps = { Velocity = { X = 0.; Y = 0. } } |> Bullet
         let bullet = Some {
-            Position = { X = 1.; Y = 1. }; 
+            Position = { X = 1.; Y = 1. };
             Bounds = { Width = 10; Height = 10 };
             Properties = bulletProps;
         }
@@ -597,7 +597,7 @@ module BulletInvaderCollision =
         afterCollision bullet [] |> equal (bullet, [])
 
 [<TestFixture>]
-module UpdateFunc = 
+module UpdateFunc =
     [<Test>]
     let ``update the timestamp on each update`` () =
         let game = { createGame [] with LastUpdate = 2.}
@@ -613,7 +613,7 @@ module UpdateFunc =
         let position = { X = 0.; Y = float offTheTop }
         let bullet = { Bullet.createWithDefaultProperties position with Bounds = bulletBounds }
 
-        let game = updateGame (createGame [bullet]) 0. 
+        let game = updateGame (createGame [bullet]) 0.
 
         equal List.empty game.Entities
 
@@ -624,7 +624,7 @@ module UpdateFunc =
         let position = { X = 0.; Y = float offTheTop }
         let bullet = { Bullet.createWithDefaultProperties position with Bounds = bulletBounds }
 
-        let game = updateGame (createGame [bullet]) 0. 
+        let game = updateGame (createGame [bullet]) 0.
 
         equal [bullet] game.Entities
 
@@ -641,13 +641,13 @@ module UpdateFunc =
     let ``reset the invasion step time since last move after passing the time to move`` () =
         let invasion = { SinceLastMove = 1.; TimeToMove = 1000.; Direction = Invasion.Direction.Down }
         let game = { (createGame []) with Invasion = invasion }
-        
+
         let updatedGame = updateGame game 1000.
 
         equal 0. updatedGame.Invasion.SinceLastMove
 
 [<TestFixture>]
-module InvasionDirection = 
+module InvasionDirection =
     let invaderWidth = 1;
     let defaultInvader = {
         Position = { X = 0.; Y = 0. };
@@ -656,19 +656,19 @@ module InvasionDirection =
     }
 
     let timeToMove = 1000.
-    let createGameWithInvasion invader direction = 
+    let createGameWithInvasion invader direction =
         createGame invader
-                   |> updateInvasion 
-                   <| { Direction = direction; 
-                        TimeToMove = timeToMove; 
+                   |> updateInvasion
+                   <| { Direction = direction;
+                        TimeToMove = timeToMove;
                         SinceLastMove = 0. }
 
     [<Test>]
     let ``the invasion starts moving down when it hits the right edge and is moving right`` () =
-        let positionBeforeRightEdge = float SpaceInvaders.Constraints.Bounds.Right - 
+        let positionBeforeRightEdge = float SpaceInvaders.Constraints.Bounds.Right -
                                         Invasion.Direction.Right.X - float invaderWidth
         let invader = Entity.updateXPos defaultInvader positionBeforeRightEdge
-        
+
         let game = createGameWithInvasion [invader] Invasion.Direction.Right
                    |> updateGame <| timeToMove
 
@@ -680,7 +680,7 @@ module InvasionDirection =
         let invader = Entity.updateXPos defaultInvader positionBeyondRightEdge
 
         let game = createGameWithInvasion [invader] Invasion.Direction.Right
-                   |> updateGame <| timeToMove 
+                   |> updateGame <| timeToMove
 
         equal Invasion.Direction.Down game.Invasion.Direction
 
@@ -726,7 +726,7 @@ module InvasionDirection =
         equal Invasion.Direction.Right game.Invasion.Direction
 
     [<Test>]
-    let ``the direction does not change when it is not yet time to move`` () = 
+    let ``the direction does not change when it is not yet time to move`` () =
         let onNextMoveBeyondLeftBorder = float SpaceInvaders.Constraints.Bounds.Left
         let invader = Entity.updateXPos defaultInvader onNextMoveBeyondLeftBorder
 

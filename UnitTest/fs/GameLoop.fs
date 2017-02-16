@@ -7,12 +7,13 @@ open SpaceInvaders.GameLoop
 module GameLoop =
 
     let mutable gameAsListOfEvents = []
-   
+    let mutable callbacks = []
+
     let updateFunc game event =
         gameAsListOfEvents <- event :: game
         gameAsListOfEvents
-    let mutable callbacks = []
-    let requestFrame cb = 
+
+    let requestFrame cb =
         callbacks <- cb :: callbacks
         ()
 
@@ -24,7 +25,7 @@ module GameLoop =
     [<Test>]
     let ``creates an updater that encapsulates updating the game state`` () =
         let event = 10. |> Tick
-        let eventHandler = createGameEventHandler updateFunc gameAsListOfEvents 
+        let eventHandler = createGameEventHandler updateFunc gameAsListOfEvents
         let currentState = eventHandler event
 
         equal true ([event] = currentState)
@@ -33,7 +34,7 @@ module GameLoop =
     let ``updater uses the initial game`` () =
         let event = 10. |> Tick
         let updatedState = event :: gameAsListOfEvents
-        let eventHandler = createGameEventHandler updateFunc updatedState 
+        let eventHandler = createGameEventHandler updateFunc updatedState
         let currentState = eventHandler event
 
         equal true ([event; event] = currentState)
@@ -64,8 +65,8 @@ module GameLoop =
 
     [<Test>]
     let ``when the loop is started the update is called with 0`` () =
-        let eventHandler = createGameEventHandler updateFunc gameAsListOfEvents 
-        
+        let eventHandler = createGameEventHandler updateFunc gameAsListOfEvents
+
         start requestFrame eventHandler ignore
 
         let expectedEvent = 0. |> Tick
@@ -73,10 +74,10 @@ module GameLoop =
 
     [<Test>]
     let ``the result of the event handler is rendered`` () =
-        let mutable renderedGame = [] 
+        let mutable renderedGame = []
         let renderer game =
             renderedGame <- game
-        let eventHandler = createGameEventHandler updateFunc gameAsListOfEvents 
+        let eventHandler = createGameEventHandler updateFunc gameAsListOfEvents
 
         start requestFrame eventHandler renderer
 
