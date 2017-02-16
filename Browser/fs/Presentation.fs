@@ -16,8 +16,6 @@ type Image =
 | Bullet
 | Laser
 
-type EmailAddress = EmailAddress of string
-
 let presenter (renderer:(list<Image<'HTMLImage>> -> unit)) (lookupTable:Map<Image, 'HTMLImage>) (game:Game) =
     let lookupImageKey = function
     | EntityProperties.Laser _ -> Laser
