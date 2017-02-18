@@ -6,12 +6,12 @@ open Fable.Core.JsInterop
 
 open SpaceInvaders.Image
 
-let createImage data =  
+let createImage data =
   let img = Browser.document.createElement_img()
   img.src <- data
   img
 
-let createRenderer = 
+let createRenderer =
     let canvas = Browser.document.getElementsByTagName_canvas().[0]
     let ctx = canvas.getContext_2d()
     let scale = 2.
@@ -28,7 +28,7 @@ let createRenderer =
 
     let clearToBlack() = ctx.fillRect (0., 0., SpaceInvaders.Constraints.Width, SpaceInvaders.Constraints.Height)
 
-    let renderer = (fun (images:list<Image<Browser.HTMLImageElement>>) -> 
+    let renderer = (fun (images:list<Image<Browser.HTMLImageElement>>) ->
         clearToBlack()
         images |> List.iter (fun image -> ctx.drawImage(U3.Case1 image.Image, image.Position.X, image.Position.Y))
     )

@@ -9,7 +9,7 @@ open SpaceInvaders.Game
 [<TestFixture>]
 module Presentation =
     let mutable renderedImages:Image<string> list = []
-    let renderer images = 
+    let renderer images =
         renderedImages <- images
 
     let imageLookup = [
@@ -24,13 +24,13 @@ module Presentation =
 
     let presenter' = presenter renderer imageLookup
     [<SetUp>]
-    let setup () = 
+    let setup () =
         renderedImages <- []
 
     [<Test>]
     let ``it draws the laser where it is`` () =
         let laserProperties = { RightForce = false; LeftForce = false } |> Laser
-        let laser =  { Position = {X = 10.; Y = 20.}; 
+        let laser =  { Position = {X = 10.; Y = 20.};
                        Bounds = {Width = 0; Height = 0};
                        Properties = laserProperties }
 
@@ -43,7 +43,7 @@ module Presentation =
     [<Test>]
     let ``it draws the bullet at its position when present`` () =
         let bulletProperties = { Velocity = { X = 0.; Y = 0. } } |> Bullet
-        let bullet =  { Position = {X = 30.; Y = 40.}; 
+        let bullet =  { Position = {X = 30.; Y = 40.};
                         Bounds = {Width = 0; Height = 0}
                         Properties = bulletProperties }
 
@@ -52,12 +52,12 @@ module Presentation =
         presenter' game |> ignore
 
         let bulletImage = renderedImages |> List.find (fun x -> x.Image = "bullet")
-        equal bulletImage.Position {X = 30.; Y = 40.}   
+        equal bulletImage.Position {X = 30.; Y = 40.}
 
     [<Test>]
     let ``it will draw the invader types`` () =
-        let invaderTypes = [(Large, Open, "largeInvaderOpen"); 
-                            (Large, Closed, "largeInvaderClosed"); 
+        let invaderTypes = [(Large, Open, "largeInvaderOpen");
+                            (Large, Closed, "largeInvaderClosed");
                             (Medium, Open, "mediumInvaderOpen");
                             (Medium, Closed, "mediumInvaderClosed");
                             (Small, Open, "smallInvaderOpen");
@@ -69,9 +69,9 @@ module Presentation =
         let validateImageRendered (invaderType, state, expectedImage) =
             let invaderProperties = { InvaderState = state;
                                       Type = invaderType } |> Invader
-            let invader = { 
-                Position = position; 
-                Bounds = bounds; 
+            let invader = {
+                Position = position;
+                Bounds = bounds;
                 Properties = invaderProperties }
 
             let game = createGame [ invader ]

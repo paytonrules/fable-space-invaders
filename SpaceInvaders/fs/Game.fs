@@ -378,7 +378,7 @@ let updateTimeSinceLastMove invasion delta =
     match invasion.SinceLastMove + delta with
     | sinceLastMove when sinceLastMove < invasion.TimeToMove ->
         { invasion with SinceLastMove = sinceLastMove }
-    | _ -> 
+    | _ ->
         { invasion with SinceLastMove = 0. }
 
 let updateGame game timeSinceGameStarted =
@@ -398,8 +398,8 @@ let updateGame game timeSinceGameStarted =
                            |> updateTimeSinceLastMove <| delta;
                 LastUpdate = timeSinceGameStarted }
 
-let update game event = 
-    match event with 
+let update game event =
+    match event with
     | MoveLeft -> { game with Entities = Laser.pushLaserLeft game.Entities }
     | MoveRight -> { game with Entities = Laser.pushLaserRight game.Entities }
     | StopMoveRight -> { game with Entities = Laser.stopPushingLaserRight game.Entities }
