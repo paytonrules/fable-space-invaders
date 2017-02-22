@@ -5,18 +5,25 @@ open Fake
 open Fake.Testing
 
 Target "Clean" (fun _ ->
-    CleanDirs [".fake"; "SpaceInvaders/bin"; "SpacceInvaders/obj";
+    CleanDirs [ "SpaceInvaders/bin"; "SpaceInvaders/obj";
                 "UnitTest/bin"; "UnitTest/obj";
                 "dist/umd"; "dist/test"; "PropertyTest/bin";
                 "PropertyTest/build"; "PropertyTest/obj"]
 )
 
-Target "Browser" (fun _ ->
-    Shell.Exec "yarn" |> ignore
-)
+Target "BrowserDeps" (fun _ -> Shell.Exec("yarn", "install") |> ignore)
 
-Target "Test" (fun _ ->
-    Shell.Exec("yarn", "test") |> ignore
+Target "Browser" (fun _ -> Shell.Exec("yarn") |> ignore)
+
+Target "Test" (fun _ -> Shell.Exec("yarn", "test") |> ignore)
+
+Target "Watch" (fun _ ->
+    let fableWatch = async { Shell.Exec ("yarn", "watch") |> ignore }
+    let browser = async { Shell.Exec("yarn", "run start") |> ignore }
+    let testsWatch = async { Shell.Exec("yarn", "test -- --watch") |> ignore }
+    Async.Parallel [|fableWatch; browser; testsWatch|]
+    |> Async.RunSynchronously
+    |> ignore
 )
 
 Target "BuildPropertyTest" (fun _ ->
@@ -30,7 +37,21 @@ Target "PropertyTest" (fun _ ->
     |> xUnit2 (fun p -> {p with HtmlOutputPath = Some(testDir @@ "html")})
 )
 
+Target "All" DoNothing
+
 "BuildPropertyTest"
 ==> "PropertyTest"
 
-RunTargetOrDefault "Main"
+"Clean"
+==> "BrowserDeps"
+==> "Watch"
+
+"Clean"
+==> "BrowserDeps"
+==> "Test"
+==> "BuildPropertyTest"
+==> "PropertyTest"
+==> "Browser"
+==> "All"
+
+RunTargetOrDefault "All"
