@@ -42,16 +42,19 @@ Target "All" DoNothing
 "BuildPropertyTest"
 ==> "PropertyTest"
 
-"Clean"
-==> "BrowserDeps"
+"BrowserDeps"
 ==> "Watch"
 
-"Clean"
-==> "BrowserDeps"
-==> "Test"
-==> "BuildPropertyTest"
-==> "PropertyTest"
+"BrowserDeps"
 ==> "Browser"
+
+"Browser"
+==> "Test"
+
+"Clean"
+==> "Browser"
+==> "Test"
+==> "PropertyTest"
 ==> "All"
 
 RunTargetOrDefault "All"
