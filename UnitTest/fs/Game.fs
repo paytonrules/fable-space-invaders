@@ -22,7 +22,7 @@ module EntityIntersection =
         ({ X = 0.; Y = 11. }, { X = 0.; Y = 0. }, false);
     ]
     [<Test>]
-    let ``entity intersection, data driven test`` () =
+    let ``entity intersection (this is a data driven test)`` () =
 
         cases |> List.iter (fun (firstBox, secondBox, expects) ->
             let firstBox = {

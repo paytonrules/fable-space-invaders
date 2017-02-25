@@ -13,7 +13,7 @@ module EventMapping =
     let mutable updatedGame = initialGame
     let mutable events = []
 
-    let updateFunc game event = 
+    let updateFunc game event =
         updatedGame <- game
         events <- events @ [event]
         updatedGame
@@ -33,7 +33,7 @@ module EventMapping =
         equal 1 updatedGame
 
     [<Test>]
-    let ``map rightarrow to moveright event`` () = 
+    let ``map rightarrow to moveright event`` () =
         let mapper = mapEvents updateFunc
 
         mapper 1 ({key = KeyCodes.RightArrow |> float } |> KeyDown) |> ignore
@@ -51,7 +51,7 @@ module EventMapping =
         equal 1 updatedGame
 
     [<Test>]
-    let ``update returns the updated game`` () = 
+    let ``update returns the updated game`` () =
         let mapper = mapEvents updateFunc
 
         let newGame = mapper 1 ({key = KeyCodes.Spacebar |> float } |> KeyDown)
@@ -59,7 +59,7 @@ module EventMapping =
         equal newGame updatedGame
 
     [<Test>]
-    let ``do nothing if the key isn't mapped`` () = 
+    let ``do nothing if the key isn't mapped`` () =
 
         let mapper = mapEvents updateFunc
 
