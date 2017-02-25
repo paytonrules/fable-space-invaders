@@ -14,6 +14,10 @@
    !-->
   <ItemGroup>
     <Reference Include="../node_modules/fable-core/Fable.Core.dll" />
+    <ProjectReference Include="../SpaceInvaders/SpaceInvaders.fsproj">
+      <Project>{C8152C89-3216-40CF-91A6-E88DA89E6548}</Project>
+      <Name>SpaceInvaders</Name>
+    </ProjectReference>
     <ProjectReference Include="../Browser/Browser.fsproj">
       <Project>{EFB3DFD6-9C92-4D7D-934B-CDC335A530C3}</Project>
       <Name>Main</Name>
