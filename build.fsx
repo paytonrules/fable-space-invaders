@@ -17,6 +17,14 @@ Target "Browser" (fun _ -> Shell.Exec("yarn") |> ignore)
 
 Target "Test" (fun _ -> Shell.Exec("yarn", "test") |> ignore)
 
+Target "TestWatch" (fun _ ->
+    let testWatch = async { Shell.Exec("yarn", "test -- --watch") |> ignore }
+
+    Async.Parallel [|testWatch|]
+    |> Async.RunSynchronously
+    |> ignore
+)
+
 Target "Watch" (fun _ ->
     let fableWatch = async { Shell.Exec ("yarn", "watch") |> ignore }
     let browser = async { Shell.Exec("yarn", "run start") |> ignore }
