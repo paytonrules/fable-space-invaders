@@ -186,12 +186,12 @@ module Invader =
     let toggleState = function | Closed -> Open | Open -> Closed
 
     let update (invader, invaderProps) invasion delta =
-        if Invasion.isTimeToMove invasion delta
-        then
-            let newPosition = Vector2.add invader.Position invasion.Direction
-            let invaderProps = { invaderProps with InvaderState = toggleState invaderProps.InvaderState } |> Invader
-            { invader with Position = newPosition; Properties = invaderProps }
-        else invader
+        match Invasion.isTimeToMove invasion delta with
+        | true ->
+          let newPosition = Vector2.add invader.Position invasion.Direction
+          let invaderProps = { invaderProps with InvaderState = toggleState invaderProps.InvaderState } |> Invader
+          { invader with Position = newPosition; Properties = invaderProps }
+        | false -> invader
 
 module Laser =
     let speedPerMillisecond = 0.200
