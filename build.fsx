@@ -28,10 +28,10 @@ Target "UpgradeFableDeps" (fun _ ->
 Target "RemoveFableDep" (fun _ ->
     let dep = getBuildParam "dep"
     match dep with
-    "" -> failwith "You must provide a dependency to remove"
-    _ ->
-      let removeCommand = sprintf "remove %s" dep
-      Shell.Exec("yarn", removeCommand) |> ignore)
+    | "" -> failwith "You must provide a dependency to remove"
+    | _ ->
+        let removeCommand = sprintf "remove %s" dep
+        Shell.Exec("yarn", removeCommand) |> ignore)
 
 Target "TestWatch" (fun _ ->
     let testWatch = async { Shell.Exec("yarn", "test -- --watch") |> ignore }
