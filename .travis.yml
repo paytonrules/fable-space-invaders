@@ -1,0 +1,2 @@
+language: fsharp
+script: ./build.sh
