@@ -5,15 +5,13 @@ open Fake
 open Fake.Testing
 
 Target "Clean" (fun _ ->
-    CleanDirs [ "SpaceInvaders/bin"; "SpaceInvaders/obj";
+    CleanDirs [ "node_modules"; "SpaceInvaders/bin"; "SpaceInvaders/obj";
                 "UnitTest/bin"; "UnitTest/obj";
                 "dist/umd"; "dist/test"; "PropertyTest/bin";
                 "PropertyTest/build"; "PropertyTest/obj"]
 )
 
-Target "BrowserDeps" (fun _ -> Shell.Exec("yarn", "install") |> ignore)
-
-Target "Browser" (fun _ -> Shell.Exec("yarn") |> ignore)
+Target "Browser" (fun _ -> Shell.Exec("yarn", "install") |> ignore)
 
 Target "Test" (fun _ -> Shell.Exec("yarn", "test") |> ignore)
 
@@ -59,22 +57,23 @@ Target "PropertyTest" (fun _ ->
 
 Target "All" DoNothing
 
-"BuildPropertyTest"
-==> "PropertyTest"
-
-"BrowserDeps"
+"Browser"
 ==> "Watch"
-
-"BrowserDeps"
-==> "Browser"
 
 "Browser"
 ==> "Test"
 
-"Clean"
-==> "Browser"
-==> "Test"
+"Browser"
+==> "TestWatch"
+
+"BuildPropertyTest"
 ==> "PropertyTest"
+
+"Clean"
+<=> "Browser"
+<=> "Test"
+<=> "BuildPropertyTest"
+<=> "PropertyTest"
 ==> "All"
 
 RunTargetOrDefault "All"
