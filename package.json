@@ -9,7 +9,7 @@
     "fable-compiler": "^0.7.7",
     "fable-core": "^0.7.6",
     "fable-plugins-nunit": "^0.7.1",
-    "fable-powerpack": "^0.0.18",
+    "fable-powerpack": "^0.0.20",
     "mocha": "^3.1.2"
   },
   "license": "MIT",
