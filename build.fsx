@@ -17,6 +17,10 @@ Target "Browser" (fun _ -> Shell.Exec("yarn") |> ignore)
 
 Target "Test" (fun _ -> Shell.Exec("yarn", "test") |> ignore)
 
+Target "Outdated" (fun _ -> Shell.Exec("yarn", "outdated") |> ignore)
+
+Target "UpgradeFableDeps" (fun _ -> Shell.Exec("yarn", "upgrade") |> ignore)
+
 Target "TestWatch" (fun _ ->
     let testWatch = async { Shell.Exec("yarn", "test -- --watch") |> ignore }
 
