@@ -1,3 +1,4 @@
 language: fsharp
 script:
   - ./build.sh
+sudo: false
