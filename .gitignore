@@ -25,3 +25,4 @@ packages/
 ## .fake
 .fake/
 build/
+FAKE_CACHE_build*.dll
