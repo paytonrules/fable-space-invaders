@@ -104,6 +104,8 @@ Property Based Tests are written using XUnit and FSCheck, and only test the Spac
 
 The positive of this development is there is now a clean separation of platform independent code, in the SpaceInvaders project, and platform dependent code in the Browser and UnitTest projects. Furthermore anything supported by XUnit3 and FSCheck is supported, because it is running on the .NET/Mono runtime. The disadvantage is multiple builds and additional complexity.
 
+To run the Property bases tests you use `PropertyTest` task. Note that this task runs a `Clean` first, so running this task while a the `Watch` task is running will force you to restart the `Watch`. To avoid this you can pass `noclean=true` to the task like so: `./build.sh PropertyTest noclean=true`.
+
 ## Adding Dependencies
 
 ### Files And Project References
@@ -130,7 +132,7 @@ You can then do one of the following:
 
 * Use `./build.sh Upgrade dep=foo` which will upgrade the package `foo` to the latest version, and it will also automatically edit `package.json` to use the latest version for `foo`
 
-* You can manually edit `package.json` to use the latest versions, and then run `.\build.sh BrowserDeps` to run the entire build, which will install dependencies. In general you shouldn't do this until you understand the setup.
+* You can manually edit `package.json` to use the latest versions, and then run `.\build.sh Browser` to run the entire build, which will install dependencies. In general you shouldn't do this until you understand the setup.
 
 You should check-in changes to `package.json` and `yarn.lock` to source control.
 
@@ -144,13 +146,13 @@ You can do one of the following:
 
 #### Locking down your dependencies
 
-Whenever you use the tasks around Fable dependencies, you'll need to check in the updated `package.json` and `yarn.lock` files. These files ensure that anybody who uses the `BrowserDeps` task will get the same versions of the dependencies, including the Fable compiler.
+Whenever you use the tasks around Fable dependencies, you'll need to check in the updated `package.json` and `yarn.lock` files. These files ensure that anybody who uses the `Browser` task will get the same versions of the dependencies, including the Fable compiler.
 
 You should very frequently use the `Outdated` and `UpgradeFableDeps` to ensure that your dependencies are up to date.
 
 ### Paket Dependencies
 
-The dependencies installed by Paket are only used by the `PropertyTests` for running property-based tests on the .NET/Mono runtime, and to run FAKE itself. The `build.sh` or `build.cmd` command will bootstrap the Paket program, and the packages in `packet.dependencies` will be installed.
+The dependencies installed by Paket are only used by the `PropertyTest` for running property-based tests on the .NET/Mono runtime, and to run FAKE itself. The `build.sh` or `build.cmd` command will bootstrap the Paket program, and the packages in `packet.dependencies` will be installed.
 
 More information on paket can be found at https://fsprojects.github.io/Paket/.
 
@@ -203,29 +205,29 @@ The process starts in the `build.sh` file (Or `build.cmd ` on Windows) which beg
 Since we're running the `Browser` task in this example you can look at its target in `build.fsx` to see that it's a very simple shell call to `yarn`.
 
 ```
-Target "Browser" (fun _ -> Shell.Exec("yarn") |> ignore)
+Target "Browser" (fun _ -> Shell.Exec("yarn", "install") |> ignore)
 ```
 
 You can also scan to the bottom of the build.fsx file to see its dependency chain. As of this writing it looks like:
 
 ```
-"BrowserDeps"
-==> "Browser"
+"Clean"
+<=> "Browser"
+<=> "Test"
+<=> "BuildPropertyTest"
+<=> "PropertyTest"
+==> "All"
 ```
 
-So `Browser` depends on `BrowserDeps`. A quick check to see what `BrowserDeps` does and you'll see it's also a call out to `yarn`.
+So `Browser` does not depend on clean, but if you run `All` then the `Clean` task will run first. I admit I don't completely understand FAKE's dependency management yet. A quick check of `Clean` shows it empties a bunch of directories.
 
-```
-Target "BrowserDeps" (fun _ -> Shell.Exec("yarn", "install") |> ignore)
-```
-
-So running the `Browser` task just makes two calls to `yarn`, `install` and the default. Now what do those do...(deeper into the rabbit hole we go).
+So running the `Browser` task just makes a calls to `yarn install`. Now what does that do...(deeper into the rabbit hole we go).
 
 `yarn install` installs any JavaScript dependecies from NPM, the same as `npm` does if you're familiar with that. It gets those from the file `package.json` it gets those from a traditional JavaScript project.
 
 >*Bug Alert* The confusion here is part of what prompted me to write the unified FAKE build and this Readme to end all Readme's. Paket installs .NET/Mono runtime dependencies like   FAKE and FSCheck. These are not included in the final browser JavaScript. Yarn installs JavaScript dependencies like the fable-compiler, fable-powerpack and mocha. Some of these (like fable-powerpack) end up transpiled and included in the final compiled JavaScript and some are run exclusively on Node runtime like binaries, like the Fable compiler itself. If you're going to add a depencency that's in the final program, you have to add it from NPM and not from NuGet via Paket.
 
-After `yarn install` completes then `yarn` is called. `yarn` executes the default task in the package.json, which is `build`. `build` calls the fable compiler via `fable --target umd`. Down the rabbit hole we continue...
+After `yarn install` completes then the build task in the package.json is called, which is `build`. `build` calls the fable compiler via `fable --target umd`. Down the rabbit hole we continue...
 
 The Fable compiler uses its own JSON configuration file, called `fableconfig.json`. I'm not going to go into it in detail here, in part because I don't understand it all, but note that our current one has two targets: umd and test. In the umd target we reference two project files: `SpaceInvaders.fsproj` and `Browser.fsproj`. In the test we reference three by inclding `UnitTest.fsproj` and adding the plugin `Fable.Plugins.NUnit.dll` which takes our NUnit tests and converts them to the JavaScript testing framework Mocha.
 
