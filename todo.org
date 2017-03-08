@@ -1,0 +1,11 @@
+* DONE Reset all the type inference, use git interactive to keep type declarations
+  CLOSED: [2017-03-05 Sun 07:51]
+* DONE It's time - make the submodules separate files
+  CLOSED: [2017-03-05 Sun 08:02]
+** Move the tests? Maybe?
+* TODO Reorg the file
+Instead of files for each module, which seems overkill and unhelpful, reorg the file for ease of navigation.
+Options: types/modules/game functions
+Options: global types, module with types specific to a module in them
+* TODO Add a type "winnower" for each module. Address compiler errors.
+* TODO Begin implementing the space invaders firing
