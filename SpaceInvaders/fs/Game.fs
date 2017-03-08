@@ -1,5 +1,6 @@
 module SpaceInvaders.Game
 
+type Speed = int
 type Delta = float
 
 type Sides = {
@@ -17,18 +18,13 @@ type Vector2 = {
     Y: float;
 }
 
-module Vector2 =
-    let add vector1 vector2 =
-        { X = vector1.X + vector2.X; Y = vector1.Y + vector2.Y }
-
-    let scale vector scale =
-        { X = vector.X * scale; Y = vector.Y * scale }
-
 type Position = Vector2
 
 type BulletProperties = {
     Velocity: Vector2;
 }
+
+type MissileProperties = MissileProperties of BulletProperties
 
 type InvaderState = Open | Closed
 type InvaderType = Large | Medium | Small
@@ -46,6 +42,9 @@ type EntityProperties =
 | Bullet of BulletProperties
 | Invader of InvaderProperties
 | Laser of LaserProperties
+| RandomMissile of MissileProperties
+| TrackingMissile of MissileProperties
+| PoweredMissile of MissileProperties
 
 type Entity  =  {
     Position: Vector2;
@@ -53,29 +52,11 @@ type Entity  =  {
     Properties: EntityProperties;
 }
 
-module Entity =
-    let updatePosition entity position =
-        { entity with Position = position }
-
-    let updateXPos entity x =
-        { entity with Position = { X = x; Y = entity.Position.Y } }
-
-    let bottom entity = (float entity.Bounds.Height + entity.Position.Y)
-
-    let right entity = (float entity.Bounds.Width + entity.Position.X)
-
-    let isOverlapping (entityOne:Entity) entityTwo =
-         not (entityTwo.Position.X > right entityOne
-              || right entityTwo < entityOne.Position.X
-              || entityTwo.Position.Y > bottom entityOne
-              || bottom entityTwo < entityOne.Position.Y)
-
 type InvasionStep = {
     TimeToMove: Delta;
     SinceLastMove: Delta;
     Direction: Vector2;
 }
-
 
 type Entities = Entity list
 
@@ -93,11 +74,29 @@ type Event =
 | StopMoveLeft
 | StopMoveRight
 
-let clamp minMax value =
-    match value with
-    | value when value < fst minMax -> fst minMax
-    | value when value > snd minMax -> snd minMax
-    | _ -> value
+module Vector2 =
+    let add vector1 vector2 =
+        { X = vector1.X + vector2.X; Y = vector1.Y + vector2.Y }
+
+    let scale vector scale =
+        { X = vector.X * scale; Y = vector.Y * scale }
+
+module Entity =
+    let updatePosition entity position =
+        { entity with Position = position }
+
+    let updateXPos entity x =
+        { entity with Position = { X = x; Y = entity.Position.Y } }
+
+    let bottom entity = (float entity.Bounds.Height + entity.Position.Y)
+
+    let right entity = (float entity.Bounds.Width + entity.Position.X)
+
+    let isOverlapping (entityOne:Entity) entityTwo =
+         not (entityTwo.Position.X > right entityOne
+              || right entityTwo < entityOne.Position.X
+              || entityTwo.Position.Y > bottom entityOne
+              || bottom entityTwo < entityOne.Position.Y)
 
 module Invasion =
     let columnWidth = 16.
@@ -170,6 +169,17 @@ module Invasion =
         invaders |> List.filter (fun invader ->
                                     not <| Entity.isOverlapping invader bullet)
 
+    // Keep in mind that the spaceship actually counts as one of the shots
+    // Hot damn see this: http://www.computerarcheology.com/Arcade/SpaceInvaders/
+    //
+    type ShouldFireMissile = Entities -> InvasionStep -> Delta -> bool
+
+module Missile =
+    type MissileSpeedFunc = Entities -> Speed
+    type NewMissileLocation = MissileProperties -> Entities
+    type UpdateMissile = MissileSpeedFunc -> Entity -> Position
+
+
 module Invader =
 
     let bounds = function
@@ -199,6 +209,12 @@ module Laser =
     let midpoint = (float bounds.Width) / 2. |> floor  // IOW - 6
     let updateProperties laser properties =
         { laser with Properties = properties }
+
+    let clamp minMax value =
+        match value with
+        | value when value < fst minMax -> fst minMax
+        | value when value > snd minMax -> snd minMax
+        | _ -> value
 
     let properties entity =
         match entity.Properties with
@@ -263,7 +279,7 @@ module Bullet =
     let create position bulletProperties =
         { Properties = bulletProperties;
           Position = position;
-          Bounds = { Width = 0; Height = 0 }}
+          Bounds = { Width = 0; Height = 0 }} // How is this working?
 
     let createWithDefaultProperties position =
         create position (Bullet { Velocity = { X = 0.; Y = -0.1 }})
@@ -277,6 +293,8 @@ module Bullet =
                           | _ -> bullet.Position
 
         { bullet with Position = newPosition }
+
+let invasionUpperLeftCorner = { X = 3.; Y = 30.}
 
 let isBullet entity =
     match entity.Properties with
@@ -310,9 +328,8 @@ let addBullet game =
               | None -> game
     | Some _ -> game
 
-let invasionUpperLeftCorner = { X = 3.; Y = 30.}
-
 let positionForInvaderAtIndex i =
+
     let row = i / Invasion.columns |> float
     let column = i % Invasion.columns |> float
     { X = column * Invasion.columnWidth; Y = row * Invasion.rowHeight }
@@ -326,11 +343,6 @@ let typeForInvaderAtIndex = function
 let positionAndTypeForInvaderAtIndex i =
     (positionForInvaderAtIndex i, typeForInvaderAtIndex i)
 
-let initialInvaders = [0..(Invasion.columns * Invasion.rows) - 1]
-                      |> List.map (positionAndTypeForInvaderAtIndex >> Invader.create)
-
-let initialLaser = Laser.create { X = 105.; Y = 216. }
-
 let createGame entities =
     {
         Entities = entities;
@@ -339,7 +351,6 @@ let createGame entities =
                      SinceLastMove = 0.;
                      Direction = Invasion.Direction.Right }
     }
-let initialGame = [ initialLaser ] @ initialInvaders |> createGame
 
 let updateInvasion game invasion =
     { game with Invasion = invasion }
@@ -349,7 +360,8 @@ let moveEntities entities invasion delta =
                             match entity.Properties with
                             | Laser _ -> Laser.update entity delta
                             | Invader props -> Invader.update (entity, props) invasion delta
-                            | Bullet _ -> Bullet.update entity delta)
+                            | Bullet _ -> Bullet.update entity delta
+                            | _ -> Bullet.update entity delta)
 
 let isPastTheTopOfTheScreen entity =
     entity.Position.Y + (float entity.Bounds.Height) < (float SpaceInvaders.Constraints.Bounds.Top)
@@ -406,3 +418,10 @@ let update game event =
     | StopMoveLeft -> { game with Entities = Laser.stopPushingLaserLeft game.Entities }
     | Update timeSinceGameStarted -> updateGame game timeSinceGameStarted
     | Shoot -> addBullet game
+
+let initialInvaders = [0..(Invasion.columns * Invasion.rows) - 1]
+                      |> List.map (positionAndTypeForInvaderAtIndex >> Invader.create)
+
+let initialLaser = Laser.create { X = 105.; Y = 216. }
+
+let initialGame = [ initialLaser ] @ initialInvaders |> createGame
