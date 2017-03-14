@@ -1,7 +1,6 @@
-module SpaceInvaders.EventMapping
+module Engine.EventMapping
 
-open SpaceInvaders.GameLoop
-open SpaceInvaders.Game
+open SpaceInvaders
 open FSharp.Core.LanguagePrimitives
 
 type KeyCodes =
@@ -27,7 +26,7 @@ let mapEvents updateFunc =
     let keyUp' = keyUp updateFunc
 
     (fun game event ->
-        match event with
-        | KeyDown e -> keyDown' game e.key
-        | KeyUp e -> keyUp' game e.key
-        | Tick e -> updateFunc game (Update e))
+      match event with
+      | GameLoop.KeyDown e -> keyDown' game e.key
+      | GameLoop.KeyUp e -> keyUp' game e.key
+      | GameLoop.Tick e -> updateFunc game (Update e))

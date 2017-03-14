@@ -13,9 +13,7 @@
    !  File order is important in F#. Files cannot depend on anything below them.
    !-->
   <ItemGroup>
-    <Compile Include="fs/Constraints.fs"/>
     <Compile Include="fs/Game.fs"/>
-    <Compile Include="fs/Image.fs" />
     <Compile Include="fs/GameLoop.fs"/>
     <Compile Include="fs/EventMapping.fs"/>
   </ItemGroup>

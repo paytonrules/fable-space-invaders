@@ -1,10 +1,10 @@
-namespace Test
+module Test.Presentation
 
 open Fable.Core.Testing
 
-open SpaceInvaders.Presentation
-open SpaceInvaders.Image
-open SpaceInvaders.Game
+open Presentation
+open Image
+open SpaceInvaders
 
 [<TestFixture>]
 module Presentation =
@@ -43,7 +43,7 @@ module Presentation =
             Invader.create ({X = 0.; Y = 0.}, Small)
         ]
 
-        let game = createGame entities
+        let game = Game.createGame entities
         presenter' game |> ignore
 
         // This is fairly icky - this will throw an exception if any of these
@@ -60,7 +60,7 @@ module Presentation =
         let bullet =  Bullet.createWithDefaultProperties {X = 30.; Y = 40.}
         let laser = Laser.create { X = 10.; Y = 5. }
 
-        let game = createGame [ bullet; laser ]
+        let game = Game.createGame [ bullet; laser ]
 
         presenter' game |> ignore
 

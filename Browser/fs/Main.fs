@@ -1,11 +1,10 @@
-module SpaceInvaders.Main
+module Main
 
 open System
-open SpaceInvaders.Window
-open SpaceInvaders.GameLoop
-open SpaceInvaders.Presentation
-open SpaceInvaders.EventMapping
-open SpaceInvaders.Game
+open SpaceInvaders
+open Engine
+open Window
+open Presentation
 open Fable.Core
 open Fable.Import
 open Fable.Import.Browser
@@ -49,17 +48,19 @@ let lookupImage = function
 let main() =
     let renderFunc = presenter createRenderer lookupImage
 
-    let eventHandler = createGameEventHandler (mapEvents update) initialGame
+    let eventHandler = GameLoop.createGameEventHandler (EventMapping.mapEvents Game.update) Game.initialGame
 
     document.addEventListener_keydown(fun e ->
-        eventHandler ({key = e.keyCode } |> KeyDown) |> ignore
+        eventHandler ({GameLoop.KeyboardEvent.key = e.keyCode }
+                      |> GameLoop.KeyDown) |> ignore
         null)
 
     document.addEventListener_keyup(fun e ->
-        eventHandler ({key = e.keyCode } |> KeyUp) |> ignore
+        eventHandler ({GameLoop.KeyboardEvent.key = e.keyCode }
+                      |> GameLoop.KeyUp) |> ignore
         null)
 
-    do start Browser.window.requestAnimationFrame eventHandler renderFunc |> ignore
+    do GameLoop.start Browser.window.requestAnimationFrame eventHandler renderFunc |> ignore
 
 do
     main ()

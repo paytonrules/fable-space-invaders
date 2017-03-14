@@ -1,7 +1,7 @@
-namespace Test
+module Test.Game
 
+open SpaceInvaders
 open Fable.Core.Testing
-open SpaceInvaders.Game
 
 [<TestFixture>]
 module EntityIntersection =
@@ -23,7 +23,6 @@ module EntityIntersection =
     ]
     [<Test>]
     let ``entity intersection (this is a data driven test)`` () =
-
         cases |> List.iter (fun (firstBox, secondBox, expects) ->
             let firstBox = {
                 Position = firstBox;
@@ -43,31 +42,31 @@ module EntityIntersection =
 module InitialInvaderPositioning =
     [<Test>]
     let ``it puts the first invader at the upper left corner of the invasion`` () =
-        let firstInvader = List.head initialInvaders
+        let firstInvader = List.head Game.initialInvaders
 
-        equal firstInvader.Position invasionUpperLeftCorner
+        equal firstInvader.Position Game.invasionUpperLeftCorner
 
     [<Test>]
     let ``it puts the next invader the width of the invader to the right`` () =
-        let secondInvader = List.item 1 initialInvaders
+        let secondInvader = List.item 1 Game.initialInvaders
 
-        let secondPosition = Vector2.add invasionUpperLeftCorner { X = Invasion.columnWidth; Y = 0. }
+        let secondPosition = Vector2.add Game.invasionUpperLeftCorner { X = Invasion.columnWidth; Y = 0. }
         equal secondInvader.Position secondPosition
 
     [<Test>]
     let ``it puts the third invader two steps to the right`` () =
-        let thirdInvader = List.item 2 initialInvaders
+        let thirdInvader = List.item 2 Game.initialInvaders
 
         let thirdPosition = Vector2.scale { X = Invasion.columnWidth; Y = 0.} 2.
-                            |> Vector2.add invasionUpperLeftCorner
+                            |> Vector2.add Game.invasionUpperLeftCorner
 
         equal thirdInvader.Position thirdPosition
 
     [<Test>]
     let ``it puts the next rows invader on the next row`` () =
-        let rowTwoInvader = List.item Invasion.columns initialInvaders
+        let rowTwoInvader = List.item Invasion.columns Game.initialInvaders
 
-        let rowTwoPosition = Vector2.add { X = 0.; Y = Invasion.rowHeight} invasionUpperLeftCorner
+        let rowTwoPosition = Vector2.add { X = 0.; Y = Invasion.rowHeight} Game.invasionUpperLeftCorner
 
         equal rowTwoInvader.Position rowTwoPosition
 
@@ -77,7 +76,7 @@ module InitialInvaderPositioning =
         |> Seq.take slice
         |> Seq.toList
 
-    let sliceInitialInvaders = sliceInvaderList initialInvaders
+    let sliceInitialInvaders = sliceInvaderList Game.initialInvaders
 
     let assertAllInvaders invaders ofType =
         invaders
@@ -334,17 +333,17 @@ module MovingLaser =
 
     [<Test>]
     let ``move left applies left force to the laser`` () =
-        let game = createGame [laser]
+        let game = Game.createGame [laser]
 
-        let updatedGame = update game MoveLeft
+        let updatedGame = Game.update game MoveLeft
         let newLaser = LaserTest.findLaserProperties updatedGame.Entities
         equal true newLaser.LeftForce
 
     [<Test>]
     let ``move right applies right force to the laser`` () =
-        let game = createGame [laser]
+        let game = Game.createGame [laser]
 
-        let updatedGame = update game MoveRight
+        let updatedGame = Game.update game MoveRight
         let newLaser = LaserTest.findLaserProperties updatedGame.Entities
         equal true newLaser.RightForce
 
@@ -353,9 +352,9 @@ module MovingLaser =
         let properties = { RightForce = true; LeftForce = false } |> Laser
         let movingRightLaser = Laser.updateProperties laser properties
 
-        let game = createGame [movingRightLaser]
+        let game = Game.createGame [movingRightLaser]
 
-        let updatedGame = update game StopMoveRight
+        let updatedGame = Game.update game StopMoveRight
         let newLaser = LaserTest.findLaserProperties updatedGame.Entities
         equal false newLaser.RightForce
 
@@ -364,9 +363,9 @@ module MovingLaser =
         let properties = { LeftForce = true; RightForce = false; } |> Laser
         let movingLeftLaser = Laser.updateProperties laser properties
 
-        let game = createGame [movingLeftLaser]
+        let game = Game.createGame [movingLeftLaser]
 
-        let updatedGame = update game StopMoveLeft
+        let updatedGame = Game.update game StopMoveLeft
         let newLaser = LaserTest.findLaserProperties updatedGame.Entities
         equal false newLaser.LeftForce
 
@@ -385,10 +384,10 @@ module UpdatingLaser =
 
     [<Test>]
     let ``update a laser with no forces, it stays in the same place`` () =
-        let game = createGame [laser]
+        let game = Game.createGame [laser]
 
         let updateEvent = Event.Update 10.
-        let updatedGame = update game updateEvent
+        let updatedGame = Game.update game updateEvent
 
         let newLaser = LaserTest.findLaser updatedGame.Entities
         equal newLaser.Position laser.Position
@@ -398,10 +397,10 @@ module UpdatingLaser =
         let properties = { RightForce = true; LeftForce = false } |> Laser
         let rightForceLaser = Laser.updateProperties laser properties
 
-        let game = createGame [rightForceLaser]
+        let game = Game.createGame [rightForceLaser]
 
         let updateEvent = Event.Update 1.
-        let updatedGame = update game updateEvent
+        let updatedGame = Game.update game updateEvent
 
         let newLaser = LaserTest.findLaser updatedGame.Entities
         equal newLaser.Position.X (rightForceLaser.Position.X + Laser.speedPerMillisecond)
@@ -411,10 +410,10 @@ module UpdatingLaser =
         let properties = { RightForce = true; LeftForce = false } |> Laser
         let rightForceLaser = Laser.updateProperties laser properties
 
-        let game = { createGame [rightForceLaser] with LastUpdate = 1.}
+        let game = { Game.createGame [rightForceLaser] with LastUpdate = 1.}
 
         let updateEvent = Event.Update 3.
-        let updatedGame = update game updateEvent
+        let updatedGame = Game.update game updateEvent
 
         let newLaser = LaserTest.findLaser updatedGame.Entities
         equal newLaser.Position.X (rightForceLaser.Position.X + (2. * Laser.speedPerMillisecond))
@@ -424,10 +423,10 @@ module UpdatingLaser =
         let laserProperties = { RightForce = false; LeftForce = true } |> Laser
         let leftForceLaser = Laser.updateProperties laser laserProperties
 
-        let game = { createGame [leftForceLaser] with LastUpdate = 1. }
+        let game = { Game.createGame [leftForceLaser] with LastUpdate = 1. }
 
         let updateEvent = Event.Update 3.
-        let updatedGame = update game updateEvent
+        let updatedGame = Game.update game updateEvent
 
         let newLaser = LaserTest.findLaser updatedGame.Entities
         equal newLaser.Position.X (leftForceLaser.Position.X - (2. * Laser.speedPerMillisecond))
@@ -437,10 +436,10 @@ module UpdatingLaser =
         let laserProperties = { RightForce = true; LeftForce = true } |> Laser
         let stuckLaser = Laser.updateProperties laser laserProperties
 
-        let game = { createGame [stuckLaser] with LastUpdate = 1.}
+        let game = { Game.createGame [stuckLaser] with LastUpdate = 1.}
 
         let updateEvent = Event.Update 3.
-        let updatedGame = update game updateEvent
+        let updatedGame = Game.update game updateEvent
 
         let newLaser = LaserTest.findLaser updatedGame.Entities
         equal newLaser.Position.X stuckLaser.Position.X
@@ -448,13 +447,13 @@ module UpdatingLaser =
     [<Test>]
     let ``stop the laser at the left constraint`` () =
         let laserProperties =  { LeftForce = true; RightForce = false } |> Laser
-        let leftPosition = { laser.Position with X = SpaceInvaders.Constraints.Bounds.Left |> float }
+        let leftPosition = { laser.Position with X = Constraints.Bounds.Left |> float }
         let leftLaser = { laser with Position = leftPosition }
                         |> Laser.updateProperties <| laserProperties
 
-        let game = createGame [leftLaser]
+        let game = Game.createGame [leftLaser]
         let updateEvent = Event.Update 3.
-        let updatedGame = update game updateEvent
+        let updatedGame = Game.update game updateEvent
 
         let newLaser = LaserTest.findLaser updatedGame.Entities
         equal newLaser.Position.X leftLaser.Position.X
@@ -462,14 +461,14 @@ module UpdatingLaser =
     [<Test>]
     let ``stop the laser at the right constraint`` () =
         let laserProperties = { LeftForce = false; RightForce = true } |> Laser
-        let rightEdge = SpaceInvaders.Constraints.Bounds.Right - laser.Bounds.Width
+        let rightEdge = Constraints.Bounds.Right - laser.Bounds.Width
         let rightPosition = { laser.Position with X = rightEdge |> float }
         let laserAtRightBorder = { laser with Position = rightPosition }
                                  |> Laser.updateProperties <| laserProperties
 
-        let game = createGame [laserAtRightBorder]
+        let game = Game.createGame [laserAtRightBorder]
         let updateEvent = Event.Update 3.
-        let updatedGame = update game updateEvent
+        let updatedGame = Game.update game updateEvent
 
         let newLaser = LaserTest.findLaser updatedGame.Entities
         equal newLaser.Position.X laserAtRightBorder.Position.X
@@ -483,7 +482,7 @@ module ShootBullets =
                        LeftForce = false } |> Laser
     }
 
-    let game = createGame [requiredLaser]
+    let game = Game.createGame [requiredLaser]
 
     let findBullet entities =
         let bullet = SpaceInvaders.Game.findBullet entities
@@ -493,7 +492,7 @@ module ShootBullets =
 
     [<Test>]
     let ``a bullet is created on the Shoot event`` () =
-        let updatedGame = update game Shoot
+        let updatedGame = Game.update game Shoot
 
         let bullet = SpaceInvaders.Game.findBullet updatedGame.Entities
 
@@ -501,8 +500,8 @@ module ShootBullets =
 
     [<Test>]
     let ``a second bullet is not created if a bullet is present`` () =
-        let firstGame = update game Shoot
-        let secondGame = update firstGame Shoot
+        let firstGame = Game.update game Shoot
+        let secondGame = Game.update firstGame Shoot
 
         let bulletCount  = secondGame.Entities
                            |> List.filter  (fun entity ->
@@ -516,9 +515,9 @@ module ShootBullets =
     [<Test>]
     let ``the bullet starts at the laser's nozzle`` () =
         let laser = Laser.create { X = 20.; Y = 30.; }
-        let game = createGame [laser]
+        let game = Game.createGame [laser]
 
-        let updatedGame = update game Shoot
+        let updatedGame = Game.update game Shoot
 
         let bullet = findBullet updatedGame.Entities
         let expectedBulletPosition = { X = 26.; Y = 30. - (float Bullet.Height) ; }
@@ -566,7 +565,7 @@ module BulletInvaderCollision =
             Properties = bulletProps;
         }
 
-        afterCollision bullet [invader] |> equal (bullet, [invader])
+        Game.afterCollision bullet [invader] |> equal (bullet, [invader])
 
     [<Test>]
     let ``when the bullet does collide with an invader remove the invader and the bullet`` () =
@@ -583,7 +582,7 @@ module BulletInvaderCollision =
             Properties = bulletProps;
         }
 
-        afterCollision bullet [invader] |> equal (None, [])
+        Game.afterCollision bullet [invader] |> equal (None, [])
 
     [<Test>]
     let ``when the bullet is the only entity it does not remove itself (check only against invaders)`` () =
@@ -594,55 +593,55 @@ module BulletInvaderCollision =
             Properties = bulletProps;
         }
 
-        afterCollision bullet [] |> equal (bullet, [])
+        Game.afterCollision bullet [] |> equal (bullet, [])
 
 [<TestFixture>]
 module UpdateFunc =
     [<Test>]
     let ``update the timestamp on each update`` () =
-        let game = { createGame [] with LastUpdate = 2.}
+        let game = { Game.createGame [] with LastUpdate = 2.}
 
-        let newGame = updateGame game 3.
+        let newGame = Game.updateGame game 3.
 
         equal newGame.LastUpdate 3.
 
     [<Test>]
     let ``after update, if the bullet is off the screen then remove it`` () =
         let bulletBounds = { Height = 5; Width = 0}
-        let offTheTop = SpaceInvaders.Constraints.Bounds.Top - bulletBounds.Height - 1
+        let offTheTop = Constraints.Bounds.Top - bulletBounds.Height - 1
         let position = { X = 0.; Y = float offTheTop }
         let bullet = { Bullet.createWithDefaultProperties position with Bounds = bulletBounds }
 
-        let game = updateGame (createGame [bullet]) 0.
+        let game = Game.updateGame (Game.createGame [bullet]) 0.
 
         equal List.empty game.Entities
 
     [<Test>]
     let ``if the bullet is still on the screen then keep it`` () =
         let bulletBounds = { Height = 5; Width = 0}
-        let offTheTop = SpaceInvaders.Constraints.Bounds.Top - bulletBounds.Height + 1
+        let offTheTop = Constraints.Bounds.Top - bulletBounds.Height + 1
         let position = { X = 0.; Y = float offTheTop }
         let bullet = { Bullet.createWithDefaultProperties position with Bounds = bulletBounds }
 
-        let game = updateGame (createGame [bullet]) 0.
+        let game = Game.updateGame (Game.createGame [bullet]) 0.
 
         equal [bullet] game.Entities
 
     [<Test>]
     let ``update the invasion step with the time since last move`` () =
         let invasion = { SinceLastMove = 3.; TimeToMove = 1000.; Direction = Invasion.Direction.Down }
-        let game = { createGame [] with Invasion = invasion }
+        let game = { Game.createGame [] with Invasion = invasion }
 
-        let updatedGame = updateGame game 2.
+        let updatedGame = Game.updateGame game 2.
 
         equal 5. updatedGame.Invasion.SinceLastMove
 
     [<Test>]
     let ``reset the invasion step time since last move after passing the time to move`` () =
         let invasion = { SinceLastMove = 1.; TimeToMove = 1000.; Direction = Invasion.Direction.Down }
-        let game = { (createGame []) with Invasion = invasion }
+        let game = { (Game.createGame []) with Invasion = invasion }
 
-        let updatedGame = updateGame game 1000.
+        let updatedGame = Game.updateGame game 1000.
 
         equal 0. updatedGame.Invasion.SinceLastMove
 
@@ -657,80 +656,80 @@ module InvasionDirection =
 
     let timeToMove = 1000.
     let createGameWithInvasion invader direction =
-        createGame invader
-                   |> updateInvasion
-                   <| { Direction = direction;
-                        TimeToMove = timeToMove;
-                        SinceLastMove = 0. }
+        Game.createGame invader
+                        |> Game.updateInvasion
+                        <| { Direction = direction;
+                             TimeToMove = timeToMove;
+                             SinceLastMove = 0. }
 
     [<Test>]
     let ``the invasion starts moving down when it hits the right edge and is moving right`` () =
-        let positionBeforeRightEdge = float SpaceInvaders.Constraints.Bounds.Right -
+        let positionBeforeRightEdge = float Constraints.Bounds.Right -
                                         Invasion.Direction.Right.X - float invaderWidth
         let invader = Entity.updateXPos defaultInvader positionBeforeRightEdge
 
         let game = createGameWithInvasion [invader] Invasion.Direction.Right
-                   |> updateGame <| timeToMove
+                   |> Game.updateGame <| timeToMove
 
         equal Invasion.Direction.Down game.Invasion.Direction
 
     [<Test>]
     let ``the invasion starts moving down when it moves beyond the right edge and is moving right`` () =
-        let positionBeyondRightEdge = float SpaceInvaders.Constraints.Bounds.Right
+        let positionBeyondRightEdge = float Constraints.Bounds.Right
         let invader = Entity.updateXPos defaultInvader positionBeyondRightEdge
 
         let game = createGameWithInvasion [invader] Invasion.Direction.Right
-                   |> updateGame <| timeToMove
+                   |> Game.updateGame <| timeToMove
 
         equal Invasion.Direction.Down game.Invasion.Direction
 
     [<Test>]
     let ``the invasion starts moving left when it is beyond the right edge and is moving down`` () =
-        let positionBeyondRightEdge = float SpaceInvaders.Constraints.Bounds.Right
+        let positionBeyondRightEdge = float Constraints.Bounds.Right
         let invader = Entity.updateXPos defaultInvader positionBeyondRightEdge
 
         let game = createGameWithInvasion [invader] Invasion.Direction.Down
-                   |> updateGame <| timeToMove
+                   |> Game.updateGame <| timeToMove
 
         equal Invasion.Direction.Left game.Invasion.Direction
 
     [<Test>]
     let ``the invasion moves down when it is at the left edge and is moving left`` () =
-        let oneMoveUntilYouHitLeftBorder = float SpaceInvaders.Constraints.Bounds.Left
+        let oneMoveUntilYouHitLeftBorder = float Constraints.Bounds.Left
                                             - Invasion.Direction.Left.X
         let invader = Entity.updateXPos defaultInvader oneMoveUntilYouHitLeftBorder
 
         let game = createGameWithInvasion [invader] Invasion.Direction.Left
-                   |> updateGame <| timeToMove
+                   |> Game.updateGame <| timeToMove
 
         equal Invasion.Direction.Down game.Invasion.Direction
 
     [<Test>]
     let ``the invasion moves down when it beyond the left edge and is moving left`` () =
-        let onNextMoveBeyondLeftBorder = float SpaceInvaders.Constraints.Bounds.Left
+        let onNextMoveBeyondLeftBorder = float Constraints.Bounds.Left
         let invader = Entity.updateXPos defaultInvader onNextMoveBeyondLeftBorder
 
         let game = createGameWithInvasion [invader] Invasion.Direction.Left
-                   |> updateGame <| timeToMove
+                   |> Game.updateGame <| timeToMove
 
         equal Invasion.Direction.Down game.Invasion.Direction
 
     [<Test>]
     let ``the invasion moves right when it beyond the left edge and is moving down`` () =
-        let onNextMoveBeyondLeftBorder = float SpaceInvaders.Constraints.Bounds.Left
+        let onNextMoveBeyondLeftBorder = float Constraints.Bounds.Left
         let invader = Entity.updateXPos defaultInvader onNextMoveBeyondLeftBorder
 
         let game = createGameWithInvasion [invader] Invasion.Direction.Down
-                   |> updateGame <| timeToMove
+                   |> Game.updateGame <| timeToMove
 
         equal Invasion.Direction.Right game.Invasion.Direction
 
     [<Test>]
     let ``the direction does not change when it is not yet time to move`` () =
-        let onNextMoveBeyondLeftBorder = float SpaceInvaders.Constraints.Bounds.Left
+        let onNextMoveBeyondLeftBorder = float Constraints.Bounds.Left
         let invader = Entity.updateXPos defaultInvader onNextMoveBeyondLeftBorder
 
         let game = createGameWithInvasion [invader] Invasion.Direction.Down
-                   |> updateGame <| timeToMove - 1.
+                   |> Game.updateGame <| timeToMove - 1.
 
         equal Invasion.Direction.Down game.Invasion.Direction

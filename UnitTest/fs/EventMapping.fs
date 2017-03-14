@@ -1,9 +1,8 @@
-namespace Test
+module Test.EventMapping
 
 open Fable.Core.Testing
-open SpaceInvaders.EventMapping
-open SpaceInvaders.GameLoop
-open SpaceInvaders.Game
+open Engine
+open Engine.GameLoop
 
 [<TestFixture>]
 module EventMapping =
@@ -25,43 +24,46 @@ module EventMapping =
 
     [<Test>]
     let ``map leftarrow to moveleft event`` () =
-        let mapper = mapEvents updateFunc
+        let mapper = EventMapping.mapEvents updateFunc
 
-        mapper 1 ({key = KeyCodes.LeftArrow |> float } |> KeyDown) |> ignore
+        mapper 1 ({key = EventMapping.KeyCodes.LeftArrow |> float }
+                  |> KeyDown) |> ignore
 
-        equal true (events = [ MoveLeft ])
+        equal true (events = [ SpaceInvaders.MoveLeft ])
         equal 1 updatedGame
 
     [<Test>]
     let ``map rightarrow to moveright event`` () =
-        let mapper = mapEvents updateFunc
+        let mapper = EventMapping.mapEvents updateFunc
 
-        mapper 1 ({key = KeyCodes.RightArrow |> float } |> KeyDown) |> ignore
+        mapper 1 ({key = EventMapping.KeyCodes.RightArrow |> float }
+                  |> KeyDown) |> ignore
 
-        equal true (events = [ MoveRight ])
+        equal true (events = [ SpaceInvaders.MoveRight ])
         equal 1 updatedGame
 
     [<Test>]
     let ``map spacebar to shoot event`` () =
-        let mapper = mapEvents updateFunc
+        let mapper = EventMapping.mapEvents updateFunc
 
-        mapper 1 ({key = KeyCodes.Spacebar |> float } |> KeyDown) |> ignore
+        mapper 1 ({key = EventMapping.KeyCodes.Spacebar |> float }
+                  |> KeyDown) |> ignore
 
-        equal true (events = [ Shoot ])
+        equal true (events = [ SpaceInvaders.Shoot ])
         equal 1 updatedGame
 
     [<Test>]
     let ``update returns the updated game`` () =
-        let mapper = mapEvents updateFunc
+        let mapper = EventMapping.mapEvents updateFunc
 
-        let newGame = mapper 1 ({key = KeyCodes.Spacebar |> float } |> KeyDown)
+        let newGame = mapper 1 ({key = EventMapping.KeyCodes.Spacebar |> float }
+                                |> KeyDown)
 
         equal newGame updatedGame
 
     [<Test>]
     let ``do nothing if the key isn't mapped`` () =
-
-        let mapper = mapEvents updateFunc
+        let mapper = EventMapping.mapEvents updateFunc
 
         let newGame = mapper 1 ({key = 1.} |> KeyDown)
 
@@ -70,33 +72,36 @@ module EventMapping =
 
     [<Test>]
     let ``map keyup LeftArrow to StopMoveLeft event`` () =
-        let mapper = mapEvents updateFunc
+        let mapper = EventMapping.mapEvents updateFunc
 
-        mapper 1 ({key = KeyCodes.LeftArrow |> float } |> KeyUp) |> ignore
+        mapper 1 ({key = EventMapping.KeyCodes.LeftArrow |> float }
+                  |> KeyUp) |> ignore
 
-        equal true (events = [ StopMoveLeft ])
+        equal true (events = [ SpaceInvaders.StopMoveLeft ])
 
     [<Test>]
     let ``map keyup RightArrow to StopMoveRight event`` () =
-        let mapper = mapEvents updateFunc
+        let mapper = EventMapping.mapEvents updateFunc
 
-        mapper 1 ({key = KeyCodes.RightArrow |> float } |> KeyUp) |> ignore
+        mapper 1 ({key = EventMapping.KeyCodes.RightArrow |> float }
+                  |> KeyUp) |> ignore
 
-        equal true (events = [ StopMoveRight ])
+        equal true (events = [ SpaceInvaders.StopMoveRight ])
 
     [<Test>]
     let ``map keyup Spacebar to ...nothing`` () =
-        let mapper = mapEvents updateFunc
+        let mapper = EventMapping.mapEvents updateFunc
 
-        mapper 1 ({key = KeyCodes.Spacebar |> float } |> KeyUp) |> ignore
+        mapper 1 ({key = EventMapping.KeyCodes.Spacebar |> float }
+                  |> KeyUp) |> ignore
 
         List.isEmpty events |> equal true
 
     [<Test>]
     let ``tick maps to an update`` () =
-        let mapper = mapEvents updateFunc
+        let mapper = EventMapping.mapEvents updateFunc
 
         let tickEvent = Tick 3.
         mapper 1 tickEvent |> ignore
 
-        (events = [ Update 3.] ) |> equal true
+        (events = [ SpaceInvaders.Update 3.] ) |> equal true
