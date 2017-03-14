@@ -1,6 +1,6 @@
 module PropertyTests
 
-open SpaceInvaders.Game
+open SpaceInvaders
 open FsCheck
 open FsCheck.Xunit
 open System
@@ -11,7 +11,7 @@ let ``the number of invaders is always the same or lower after update`` (game : 
                        |> Invasion.invadersFrom
                        |> List.length
 
-    let newGame = update game (Update delta)
+    let newGame = Game.update game (Update delta)
 
     let updatedInvaderCount = newGame.Entities
                               |> Invasion.invadersFrom
@@ -22,7 +22,7 @@ let ``the number of invaders is always the same or lower after update`` (game : 
 type GameWithLaser =
     static member GameWithLaser() =
         Arb.Default.Derive()
-        |> Arb.filter (fun g -> findLaser g.Entities <> None)
+        |> Arb.filter (fun g -> Game.findLaser g.Entities <> None)
 
 type GameWithLaserPropertyAttribute() =
     inherit PropertyAttribute(Arbitrary = [| typeof<GameWithLaser> |])
@@ -30,9 +30,9 @@ type GameWithLaserPropertyAttribute() =
 
 [<GameWithLaserProperty>]
 let ``the laser is never removed`` (game : Game, delta : Delta) =
-    let newGame = update game (Update delta)
+    let newGame = Game.update game (Update delta)
 
-    let laser = findLaser game.Entities
+    let laser = Game.findLaser game.Entities
 
     laser <> None
 
