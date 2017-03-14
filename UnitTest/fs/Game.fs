@@ -121,6 +121,7 @@ module InvasionMovement =
     let ``if it is not time to move, because delta is smaller than the SinceLastMove, TimeToMove gap, do not move`` () =
         let updatedInvader = Invader.update (invader, invaderProperties)
                                 { TimeToMove = 1.0;
+                                  Invaders = [];
                                   SinceLastMove = 0.0;
                                   Direction = { X = 1.0; Y = 0.0 } }
                                 0.99
@@ -131,6 +132,7 @@ module InvasionMovement =
     let ``move when it is time to move`` () =
         let updatedInvader = Invader.update (invader, invaderProperties)
                                 { TimeToMove = 1.0;
+                                  Invaders = [];
                                   SinceLastMove = 0.0;
                                   Direction = { X = 1.0; Y = 0.0 }}
                                 1.0
@@ -141,6 +143,7 @@ module InvasionMovement =
     let ``move when it is past time to move`` () =
         let updatedInvader = Invader.update (invader, invaderProperties)
                                 { TimeToMove = 1.0;
+                                  Invaders = [];
                                   SinceLastMove = 0.0;
                                   Direction = { X = 1.0; Y = 0.0 }}
                                 1.1
@@ -151,6 +154,7 @@ module InvasionMovement =
     let ``SinceLastMove accumulates, use delta + SinceLastMove to see if it is time to move`` () =
         let updatedInvader = Invader.update (invader, invaderProperties)
                                 { TimeToMove = 1.0;
+                                  Invaders = [];
                                   SinceLastMove = 0.9;
                                   Direction = { X = 1.0; Y = 0.0 }}
                                 0.1
@@ -161,6 +165,7 @@ module InvasionMovement =
     let ``Close the invader when it is Open (the default) and it is time to move`` () =
         let updatedInvader = Invader.update (invader, invaderProperties)
                                 { TimeToMove = 1.0;
+                                  Invaders = [];
                                   SinceLastMove = 0.0;
                                   Direction = { X = 1.0; Y = 0.0 }}
                                 1.1
@@ -174,6 +179,7 @@ module InvasionMovement =
         let closedInvader = { invaderProperties with InvaderState = Closed }
         let updatedInvader = Invader.update (invader, closedInvader)
                                 { TimeToMove = 1.0;
+                                  Invaders = [];
                                   SinceLastMove = 0.0;
                                   Direction = { X = 1.0; Y = 0.0 }}
                                 1.1
@@ -333,7 +339,7 @@ module MovingLaser =
 
     [<Test>]
     let ``move left applies left force to the laser`` () =
-        let game = Game.createGame [laser]
+        let game = Game.createGame <| Some laser <| [laser]
 
         let updatedGame = Game.update game MoveLeft
         let newLaser = LaserTest.findLaserProperties updatedGame.Entities
@@ -341,7 +347,7 @@ module MovingLaser =
 
     [<Test>]
     let ``move right applies right force to the laser`` () =
-        let game = Game.createGame [laser]
+        let game = Game.createGame <| Some laser <| [laser]
 
         let updatedGame = Game.update game MoveRight
         let newLaser = LaserTest.findLaserProperties updatedGame.Entities
@@ -352,7 +358,7 @@ module MovingLaser =
         let properties = { RightForce = true; LeftForce = false } |> Laser
         let movingRightLaser = Laser.updateProperties laser properties
 
-        let game = Game.createGame [movingRightLaser]
+        let game = Game.createGame <| Some movingRightLaser <| [movingRightLaser]
 
         let updatedGame = Game.update game StopMoveRight
         let newLaser = LaserTest.findLaserProperties updatedGame.Entities
@@ -363,7 +369,7 @@ module MovingLaser =
         let properties = { LeftForce = true; RightForce = false; } |> Laser
         let movingLeftLaser = Laser.updateProperties laser properties
 
-        let game = Game.createGame [movingLeftLaser]
+        let game = Game.createGame <| Some movingLeftLaser <| [movingLeftLaser]
 
         let updatedGame = Game.update game StopMoveLeft
         let newLaser = LaserTest.findLaserProperties updatedGame.Entities
@@ -384,7 +390,7 @@ module UpdatingLaser =
 
     [<Test>]
     let ``update a laser with no forces, it stays in the same place`` () =
-        let game = Game.createGame [laser]
+        let game = Game.createGame <| Some laser <| [laser]
 
         let updateEvent = Event.Update 10.
         let updatedGame = Game.update game updateEvent
@@ -397,7 +403,7 @@ module UpdatingLaser =
         let properties = { RightForce = true; LeftForce = false } |> Laser
         let rightForceLaser = Laser.updateProperties laser properties
 
-        let game = Game.createGame [rightForceLaser]
+        let game = Game.createGame <| Some rightForceLaser <| [rightForceLaser]
 
         let updateEvent = Event.Update 1.
         let updatedGame = Game.update game updateEvent
@@ -409,8 +415,9 @@ module UpdatingLaser =
     let ``account for delta when moving the laser`` () =
         let properties = { RightForce = true; LeftForce = false } |> Laser
         let rightForceLaser = Laser.updateProperties laser properties
+        let originalGame = Game.createGame <| Some rightForceLaser <| [rightForceLaser]
 
-        let game = { Game.createGame [rightForceLaser] with LastUpdate = 1.}
+        let game = { originalGame with LastUpdate = 1.}
 
         let updateEvent = Event.Update 3.
         let updatedGame = Game.update game updateEvent
@@ -422,8 +429,9 @@ module UpdatingLaser =
     let ``update a laser with left force, move to the left`` () =
         let laserProperties = { RightForce = false; LeftForce = true } |> Laser
         let leftForceLaser = Laser.updateProperties laser laserProperties
+        let originalGame = Game.createGame <| Some leftForceLaser <| [leftForceLaser]
 
-        let game = { Game.createGame [leftForceLaser] with LastUpdate = 1. }
+        let game = { originalGame with LastUpdate = 1. }
 
         let updateEvent = Event.Update 3.
         let updatedGame = Game.update game updateEvent
@@ -435,8 +443,9 @@ module UpdatingLaser =
     let ``update a laser with both forces, go nowhere`` () =
         let laserProperties = { RightForce = true; LeftForce = true } |> Laser
         let stuckLaser = Laser.updateProperties laser laserProperties
+        let originalGame = Game.createGame <| Some stuckLaser <| [stuckLaser]
 
-        let game = { Game.createGame [stuckLaser] with LastUpdate = 1.}
+        let game = { originalGame with LastUpdate = 1.}
 
         let updateEvent = Event.Update 3.
         let updatedGame = Game.update game updateEvent
@@ -451,7 +460,7 @@ module UpdatingLaser =
         let leftLaser = { laser with Position = leftPosition }
                         |> Laser.updateProperties <| laserProperties
 
-        let game = Game.createGame [leftLaser]
+        let game = Game.createGame <| Some leftLaser <| [leftLaser]
         let updateEvent = Event.Update 3.
         let updatedGame = Game.update game updateEvent
 
@@ -466,7 +475,7 @@ module UpdatingLaser =
         let laserAtRightBorder = { laser with Position = rightPosition }
                                  |> Laser.updateProperties <| laserProperties
 
-        let game = Game.createGame [laserAtRightBorder]
+        let game = Game.createGame <| Some laserAtRightBorder <| [laserAtRightBorder]
         let updateEvent = Event.Update 3.
         let updatedGame = Game.update game updateEvent
 
@@ -482,7 +491,7 @@ module ShootBullets =
                        LeftForce = false } |> Laser
     }
 
-    let game = Game.createGame [requiredLaser]
+    let game = Game.createGame <| Some requiredLaser <| [requiredLaser]
 
     let findBullet entities =
         let bullet = SpaceInvaders.Game.findBullet entities
@@ -515,7 +524,7 @@ module ShootBullets =
     [<Test>]
     let ``the bullet starts at the laser's nozzle`` () =
         let laser = Laser.create { X = 20.; Y = 30.; }
-        let game = Game.createGame [laser]
+        let game = Game.createGame <| Some laser <| [laser]
 
         let updatedGame = Game.update game Shoot
 
@@ -599,7 +608,7 @@ module BulletInvaderCollision =
 module UpdateFunc =
     [<Test>]
     let ``update the timestamp on each update`` () =
-        let game = { Game.createGame [] with LastUpdate = 2.}
+        let game = { Game.createGame None [] with LastUpdate = 2.}
 
         let newGame = Game.updateGame game 3.
 
@@ -612,7 +621,7 @@ module UpdateFunc =
         let position = { X = 0.; Y = float offTheTop }
         let bullet = { Bullet.createWithDefaultProperties position with Bounds = bulletBounds }
 
-        let game = Game.updateGame (Game.createGame [bullet]) 0.
+        let game = Game.updateGame (Game.createGame None [bullet]) 0.
 
         equal List.empty game.Entities
 
@@ -623,14 +632,17 @@ module UpdateFunc =
         let position = { X = 0.; Y = float offTheTop }
         let bullet = { Bullet.createWithDefaultProperties position with Bounds = bulletBounds }
 
-        let game = Game.updateGame (Game.createGame [bullet]) 0.
+        let game = Game.updateGame (Game.createGame None [bullet]) 0.
 
         equal [bullet] game.Entities
 
     [<Test>]
     let ``update the invasion step with the time since last move`` () =
-        let invasion = { SinceLastMove = 3.; TimeToMove = 1000.; Direction = Invasion.Direction.Down }
-        let game = { Game.createGame [] with Invasion = invasion }
+        let invasion = { SinceLastMove = 3.;
+                         Invaders = [];
+                         TimeToMove = 1000.;
+                         Direction = Invasion.Direction.Down }
+        let game = { Game.createGame None [] with Invasion = invasion }
 
         let updatedGame = Game.updateGame game 2.
 
@@ -638,8 +650,11 @@ module UpdateFunc =
 
     [<Test>]
     let ``reset the invasion step time since last move after passing the time to move`` () =
-        let invasion = { SinceLastMove = 1.; TimeToMove = 1000.; Direction = Invasion.Direction.Down }
-        let game = { (Game.createGame []) with Invasion = invasion }
+        let invasion = { SinceLastMove = 1.;
+                         TimeToMove = 1000.;
+                         Direction = Invasion.Direction.Down;
+                         Invaders = [] }
+        let game = { (Game.createGame None []) with Invasion = invasion }
 
         let updatedGame = Game.updateGame game 1000.
 
@@ -655,12 +670,12 @@ module InvasionDirection =
     }
 
     let timeToMove = 1000.
-    let createGameWithInvasion invader direction =
-        Game.createGame invader
-                        |> Game.updateInvasion
-                        <| { Direction = direction;
-                             TimeToMove = timeToMove;
-                             SinceLastMove = 0. }
+    let createGameWithInvasion invaders direction =
+        Game.createGame None invaders
+        |> Game.updateInvasion <| { Direction = direction;
+                                    Invaders = [];
+                                    TimeToMove = timeToMove;
+                                    SinceLastMove = 0. }
 
     [<Test>]
     let ``the invasion starts moving down when it hits the right edge and is moving right`` () =

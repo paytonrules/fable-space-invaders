@@ -52,20 +52,14 @@ type Entity  =  {
     Properties: EntityProperties;
 }
 
-type InvasionStep = {
+type Entities = Entity list
+
+type Invasion = {
+    Invaders: Entities;
     TimeToMove: Delta;
     SinceLastMove: Delta;
     Direction: Vector2;
 }
-
-type Entities = Entity list
-
-type Game = {
-    Entities: Entities;
-    LastUpdate: Delta;
-    Invasion: InvasionStep;
-}
-
 type Event =
 | MoveLeft
 | MoveRight
@@ -125,11 +119,18 @@ module Invasion =
         let Down = { X = 0.; Y = 4. }
         let Left = { X = -4.; Y = 0. }
 
+    let create invaders =
+        { TimeToMove = initialTimeToMove;
+          Invaders = [];
+          SinceLastMove = 0.;
+          Direction = Direction.Right }
+
     let invadersFrom entities =
-        entities |> List.filter ( fun entity ->
-                                    match entity.Properties with
-                                    | Invader _ -> true
-                                    | _ -> false )
+        entities
+        |> List.filter ( fun entity ->
+                         match entity.Properties with
+                         | Invader _ -> true
+                         | _ -> false )
 
     let rightBounds invaders =
         invaders
@@ -186,7 +187,7 @@ module Invasion =
     // Keep in mind that the spaceship actually counts as one of the shots
     // Hot damn see this: http://www.computerarcheology.com/Arcade/SpaceInvaders/
     //
-    type ShouldFireMissile = Entities -> InvasionStep -> Delta -> bool
+    type ShouldFireMissile = Entities -> Invasion -> Delta -> bool
 
 module Missile =
     type MissileSpeedFunc = Entities -> Speed
@@ -308,6 +309,13 @@ module Bullet =
 
         { bullet with Position = newPosition }
 
+type Game = {
+    Laser: Entity option;
+    Bullets: Entities;
+    Entities: Entities;
+    LastUpdate: Delta;
+    Invasion: Invasion;
+}
 
 module Game =
 
@@ -360,13 +368,13 @@ module Game =
   let positionAndTypeForInvaderAtIndex i =
       (positionForInvaderAtIndex i, typeForInvaderAtIndex i)
 
-  let createGame entities =
+  let createGame laser entities =
       {
+          Laser = laser;
+          Bullets = [];
           Entities = entities;
           LastUpdate = 0.;
-          Invasion = { TimeToMove = Invasion.initialTimeToMove;
-                      SinceLastMove = 0.;
-                      Direction = Invasion.Direction.Right }
+          Invasion = Invasion.create entities
       }
 
   let updateInvasion game invasion =
@@ -441,7 +449,7 @@ module Game =
 
   let initialLaser = Laser.create { X = 105.; Y = 216. }
 
-  let initialGame = [ initialLaser ] @ initialInvaders |> createGame
+  let initialGame =  createGame <| Some(initialLaser) <| initialInvaders
 
 (*
 - Leave Game as is, and in the updateGame function filter and copy, then reconstruct entity list at end of update
