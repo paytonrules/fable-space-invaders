@@ -1,11 +1,61 @@
-* DONE Reset all the type inference, use git interactive to keep type declarations
-  CLOSED: [2017-03-05 Sun 07:51]
-* DONE It's time - make the submodules separate files
-  CLOSED: [2017-03-05 Sun 08:02]
+* Space Invaders
+** DONE Reset all the type inference, use git interactive to keep type declarations
+   CLOSED: [2017-03-05 Sun 07:51]
+** DONE It's time - make the submodules separate files
+   CLOSED: [2017-03-05 Sun 08:02]
 ** Move the tests? Maybe?
-* TODO Reorg the file
-Instead of files for each module, which seems overkill and unhelpful, reorg the file for ease of navigation.
-Options: types/modules/game functions
-Options: global types, module with types specific to a module in them
-* TODO Add a type "winnower" for each module. Address compiler errors.
-* TODO Begin implementing the space invaders firing
+** DONE Reorg the file
+   CLOSED: [2017-03-08 Wed 17:02]
+ Instead of files for each module, which seems overkill and unhelpful, reorg the file for ease of navigation.
+ Options: types/modules/game functions
+ Options: global types, module with types specific to a module in them
+** DONE Fix up the presentation tests
+   CLOSED: [2017-03-08 Wed 17:03]
+*** TODO Test the lookup function? Maybe?
+*** TODO Add lookups for the missiles
+*** TODO Write the functions that spawns the missiles
+*** TODO Write missle laser detection, this will break a property test
+*** TODO Write laser/missile detection
+** DONE Get All tasks running through Fake
+   CLOSED: [2017-02-27 Mon 17:23]
+** DONE Update Readme
+   CLOSED: [2017-02-27 Mon 17:23]
+** TODO Begin implementing the space invaders firing
+*** TODO Redesign, yet again
+**** TODO Setup everything in the game in a namespace
+***** You're trying to make it so you can differentiate between Game types and Entity types.
+***** Making everything be a module you have to declare in the namespace SpaceInvaders, should improve readability greatly. This will be a huuuuuuuge commit.
+***** DONE Get the Game.fs into the namespace SpaceInvaders, rather than being an open module
+      CLOSED: [2017-03-12 Sun 10:13]
+***** TODO Make the Unit tests compile/pass
+***** TODO Make sure Main compiles
+***** TODO Make sure the Property tests compile/run
+***** TODO Look at the app
+***** TODO Move Constraints into Game.fs, with namespace
+***** TODO EventMapping/GameLoop/Image do not follow this convention. Decide if you want to
+**** TODO Setup Game to not have a list of entities, but a true sructuretrue sructuretrue sructuretrue sructuretrue sructuretrue sructuretrue sructuretrue sructuretrue structure
+**** TODO Make each function either take a specific type or just the entity + properties as a tuple
+***** Probably the second, as it reduces duplication. You can use single case discriminated unions for cleaner types.
+***** Althought the first has better compiler safety, as you can't have a mismatched entity-tuple pairing
+**** TODO Entities as a function on game instead of a field
+** TODO Invaders shoot bullets
+*** TODO Implement each of the types you already defined
+*** TODO Add lookups for the missle
+*** TODO Animate the missiles
+*** TODO Write missle laser detection, this will break a property test
+*** TODO Respawn the laser when it is hit
+** TODO Three lives, game over, hit refresh :)
+** TODO Keep Score
+** TODO TravisCI
+** TODO Score on the top of the screen
+** TODO Holding Down fire should fire if there are no bullets
+** TODO Play sound effects
+** TODO Play music
+** TODO Speed up invaders as you shoot them
+** TODO Add animation when you hit an invader
+** TODO Add defenses
+** TODO New level when you wipe out the current array
+** TODO Add the spaceships
+** TODO Make sure the numbers match the official SI website
+** TODO Get code coverage so you can see what property based tests to write
+** TODO Deploy to an actal website
