@@ -1,4 +1,4 @@
-module SpaceInvaders.Image
+module Image
 
 type Position =
     {
@@ -6,7 +6,7 @@ type Position =
         Y: float;
     }
 
-type Image<'ImageElement> = 
+type Image<'ImageElement> =
     {
         Image: 'ImageElement;
         Position: Position;

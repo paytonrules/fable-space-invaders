@@ -25,6 +25,7 @@
    !  File order is important in F#. Files cannot depend on anything below them.
    !-->
   <ItemGroup>
+    <Compile Include="fs/Image.fs" />
     <Compile Include="fs/Window.fs"/>
     <Compile Include="fs/Presentation.fs"/>
     <Compile Include="fs/Main.fs"/>

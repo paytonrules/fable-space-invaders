@@ -1,4 +1,4 @@
-module SpaceInvaders.Game
+namespace SpaceInvaders
 
 type Speed = int
 type Delta = float
@@ -74,6 +74,20 @@ type Event =
 | StopMoveLeft
 | StopMoveRight
 
+module Constraints =
+    type Rect = {
+        Left: int;
+        Right: int;
+        Top: int
+    }
+    let Width = 224.
+    let Height = 256.
+    let Bounds = {
+        Left = 3;
+        Right = 220;
+        Top = 15
+    }
+
 module Vector2 =
     let add vector1 vector2 =
         { X = vector1.X + vector2.X; Y = vector1.Y + vector2.Y }
@@ -93,7 +107,7 @@ module Entity =
     let right entity = (float entity.Bounds.Width + entity.Position.X)
 
     let isOverlapping (entityOne:Entity) entityTwo =
-         not (entityTwo.Position.X > right entityOne
+        not (entityTwo.Position.X > right entityOne
               || right entityTwo < entityOne.Position.X
               || entityTwo.Position.Y > bottom entityOne
               || bottom entityTwo < entityOne.Position.Y)
@@ -145,9 +159,9 @@ module Invasion =
 
     let (|PastRightEdge|PastLeftEdge|WithinBounds|) entities =
         let bounds = bounds entities
-        if bounds.Right >= float SpaceInvaders.Constraints.Bounds.Right
+        if bounds.Right >= float Constraints.Bounds.Right
         then PastRightEdge
-        else if bounds.Left <= float SpaceInvaders.Constraints.Bounds.Left
+        else if bounds.Left <= float Constraints.Bounds.Left
         then PastLeftEdge
         else WithinBounds
 
@@ -191,7 +205,7 @@ module Invader =
         { Position = position;
           Bounds = bounds invaderType;
           Properties = { InvaderState = Closed;
-                         Type = invaderType} |> Invader};
+                        Type = invaderType} |> Invader};
 
     let toggleState = function | Closed -> Open | Open -> Closed
 
@@ -243,10 +257,10 @@ module Laser =
     let laserDirection laser =
         let someDirection = properties laser
                             |> Option.map (function
-                                           | { RightForce = true; LeftForce = true } -> 0.
-                                           | { LeftForce = true; } -> -1.
-                                           | { RightForce = true } -> 1.
-                                           | _ -> 0.)
+                                          | { RightForce = true; LeftForce = true } -> 0.
+                                          | { LeftForce = true; } -> -1.
+                                          | { RightForce = true } -> 1.
+                                          | _ -> 0.)
 
         match someDirection with
         | Some direction -> direction
@@ -259,9 +273,9 @@ module Laser =
         laser.Position.X + movement
 
     let update laser delta =
-        let maxRight = SpaceInvaders.Constraints.Bounds.Right -
+        let maxRight = Constraints.Bounds.Right -
                         laser.Bounds.Width |> float
-        let xRange = (float SpaceInvaders.Constraints.Bounds.Left, maxRight)
+        let xRange = (float Constraints.Bounds.Left, maxRight)
 
         let clampedX = laser
                     |> laserDirection
@@ -294,134 +308,151 @@ module Bullet =
 
         { bullet with Position = newPosition }
 
-let invasionUpperLeftCorner = { X = 3.; Y = 30.}
 
-let isBullet entity =
-    match entity.Properties with
-    | Bullet e -> true
-    | _ -> false
+module Game =
 
-let findLaser entities =
-    let isLaser entity =
-        match entity.Properties with
-        | Laser e -> true
-        | _ -> false
+  let invasionUpperLeftCorner = { X = 3.; Y = 30.}
 
-    entities
-    |> List.filter isLaser
-    |> (function | [laser] -> Some laser | _ -> None)
+  let isBullet entity =
+      match entity.Properties with
+      | Bullet e -> true
+      | _ -> false
 
-let findBullet entities =
-    entities
-    |> List.filter isBullet
-    |> (function | [bullet] -> Some bullet | _ -> None)
+  let findLaser entities =
+      let isLaser entity =
+          match entity.Properties with
+          | Laser e -> true
+          | _ -> false
 
-let addBullet game =
-    match findBullet game.Entities with
-    | None -> match findLaser game.Entities with
-              | Some laser ->
-                let offset = { X = Laser.midpoint;
-                               Y = (float -Bullet.Height) }
-                let bullet = Vector2.add laser.Position offset
-                             |> Bullet.createWithDefaultProperties
-                { game with Entities = game.Entities @ [bullet] }
-              | None -> game
-    | Some _ -> game
+      entities
+      |> List.filter isLaser
+      |> (function | [laser] -> Some laser | _ -> None)
 
-let positionForInvaderAtIndex i =
+  let findBullet entities =
+      entities
+      |> List.filter isBullet
+      |> (function | [bullet] -> Some bullet | _ -> None)
 
-    let row = i / Invasion.columns |> float
-    let column = i % Invasion.columns |> float
-    { X = column * Invasion.columnWidth; Y = row * Invasion.rowHeight }
-    |> Vector2.add invasionUpperLeftCorner;
+  let addBullet game =
+      match findBullet game.Entities with
+      | None -> match findLaser game.Entities with
+                | Some laser ->
+                  let offset = { X = Laser.midpoint;
+                                Y = (float -Bullet.Height) }
+                  let bullet = Vector2.add laser.Position offset
+                              |> Bullet.createWithDefaultProperties
+                  { game with Entities = game.Entities @ [bullet] }
+                | None -> game
+      | Some _ -> game
 
-let typeForInvaderAtIndex = function
-    | i when i < Invasion.columns * 2 -> Small
-    | i when i >= Invasion.columns * 2 && i < Invasion.columns * 4 -> Medium
-    | _ -> Large
+  let positionForInvaderAtIndex i =
 
-let positionAndTypeForInvaderAtIndex i =
-    (positionForInvaderAtIndex i, typeForInvaderAtIndex i)
+      let row = i / Invasion.columns |> float
+      let column = i % Invasion.columns |> float
+      { X = column * Invasion.columnWidth; Y = row * Invasion.rowHeight }
+      |> Vector2.add invasionUpperLeftCorner;
 
-let createGame entities =
-    {
-        Entities = entities;
-        LastUpdate = 0.;
-        Invasion = { TimeToMove = Invasion.initialTimeToMove;
-                     SinceLastMove = 0.;
-                     Direction = Invasion.Direction.Right }
-    }
+  let typeForInvaderAtIndex = function
+      | i when i < Invasion.columns * 2 -> Small
+      | i when i >= Invasion.columns * 2 && i < Invasion.columns * 4 -> Medium
+      | _ -> Large
 
-let updateInvasion game invasion =
-    { game with Invasion = invasion }
+  let positionAndTypeForInvaderAtIndex i =
+      (positionForInvaderAtIndex i, typeForInvaderAtIndex i)
 
-let moveEntities entities invasion delta =
-    entities |> List.map (fun entity ->
-                            match entity.Properties with
-                            | Laser _ -> Laser.update entity delta
-                            | Invader props -> Invader.update (entity, props) invasion delta
-                            | Bullet _ -> Bullet.update entity delta
-                            | _ -> Bullet.update entity delta)
+  let createGame entities =
+      {
+          Entities = entities;
+          LastUpdate = 0.;
+          Invasion = { TimeToMove = Invasion.initialTimeToMove;
+                      SinceLastMove = 0.;
+                      Direction = Invasion.Direction.Right }
+      }
 
-let isPastTheTopOfTheScreen entity =
-    entity.Position.Y + (float entity.Bounds.Height) < (float SpaceInvaders.Constraints.Bounds.Top)
+  let updateInvasion game invasion =
+      { game with Invasion = invasion }
 
-let removeOffscreenBullet bullet =
-    match bullet with
-    | Some bullet when isPastTheTopOfTheScreen bullet -> None
-    | Some bullet -> Some bullet
-    | None -> None
+  let moveEntities entities invasion delta =
+      entities |> List.map (fun entity ->
+                              match entity.Properties with
+                              | Laser _ -> Laser.update entity delta
+                              | Invader props -> Invader.update (entity, props) invasion delta
+                              | Bullet _ -> Bullet.update entity delta
+                              | _ -> Bullet.update entity delta)
 
-let changeInvasionDirection invaders invasion delta =
-    if Invasion.isTimeToMove invasion delta
-    then Invasion.nextInvasionDirection invaders invasion
-    else invasion
+  let isPastTheTopOfTheScreen entity =
+      entity.Position.Y + (float entity.Bounds.Height) < (float Constraints.Bounds.Top)
 
-let afterCollision bullet invaders =
-    match bullet with
-    | None -> (None, invaders)
-    | Some bullet ->
-        let invaders' = Invasion.removeShotInvaders invaders bullet
-        if List.length invaders = List.length invaders'
-        then (Some bullet, invaders)
-        else (None, invaders')
+  let removeOffscreenBullet bullet =
+      match bullet with
+      | Some bullet when isPastTheTopOfTheScreen bullet -> None
+      | Some bullet -> Some bullet
+      | None -> None
 
-let updateTimeSinceLastMove invasion delta =
-    match invasion.SinceLastMove + delta with
-    | sinceLastMove when sinceLastMove < invasion.TimeToMove ->
-        { invasion with SinceLastMove = sinceLastMove }
-    | _ ->
-        { invasion with SinceLastMove = 0. }
+  let changeInvasionDirection invaders invasion delta =
+      if Invasion.isTimeToMove invasion delta
+      then Invasion.nextInvasionDirection invaders invasion
+      else invasion
 
-let updateGame game timeSinceGameStarted =
-    let delta = (timeSinceGameStarted - game.LastUpdate)
-    let movedEntities = moveEntities game.Entities game.Invasion delta
-    let laser = findLaser movedEntities
+  let afterCollision bullet invaders =
+      match bullet with
+      | None -> (None, invaders)
+      | Some bullet ->
+          let invaders' = Invasion.removeShotInvaders invaders bullet
+          if List.length invaders = List.length invaders'
+          then (Some bullet, invaders)
+          else (None, invaders')
 
-    let (bullet, invaders) = findBullet movedEntities
-                             |> removeOffscreenBullet
-                             |> afterCollision
-                             <| Invasion.invadersFrom movedEntities
+  let updateTimeSinceLastMove invasion delta =
+      match invasion.SinceLastMove + delta with
+      | sinceLastMove when sinceLastMove < invasion.TimeToMove ->
+          { invasion with SinceLastMove = sinceLastMove }
+      | _ ->
+          { invasion with SinceLastMove = 0. }
 
-    { game with Entities = List.map Some invaders @ [bullet] @ [laser]
-                           |> List.choose id;
-                Invasion = game.Invasion
-                           |> changeInvasionDirection invaders <| delta
-                           |> updateTimeSinceLastMove <| delta;
-                LastUpdate = timeSinceGameStarted }
+  let updateGame game timeSinceGameStarted =
+      let delta = (timeSinceGameStarted - game.LastUpdate)
+      let movedEntities = moveEntities game.Entities game.Invasion delta
+      let laser = findLaser movedEntities
 
-let update game event =
-    match event with
-    | MoveLeft -> { game with Entities = Laser.pushLaserLeft game.Entities }
-    | MoveRight -> { game with Entities = Laser.pushLaserRight game.Entities }
-    | StopMoveRight -> { game with Entities = Laser.stopPushingLaserRight game.Entities }
-    | StopMoveLeft -> { game with Entities = Laser.stopPushingLaserLeft game.Entities }
-    | Update timeSinceGameStarted -> updateGame game timeSinceGameStarted
-    | Shoot -> addBullet game
+      let (bullet, invaders) = findBullet movedEntities
+                              |> removeOffscreenBullet
+                              |> afterCollision
+                              <| Invasion.invadersFrom movedEntities
 
-let initialInvaders = [0..(Invasion.columns * Invasion.rows) - 1]
-                      |> List.map (positionAndTypeForInvaderAtIndex >> Invader.create)
+      { game with Entities = List.map Some invaders @ [bullet] @ [laser]
+                            |> List.choose id;
+                  Invasion = game.Invasion
+                            |> changeInvasionDirection invaders <| delta
+                            |> updateTimeSinceLastMove <| delta;
+                  LastUpdate = timeSinceGameStarted }
 
-let initialLaser = Laser.create { X = 105.; Y = 216. }
+  let update game event =
+      match event with
+      | MoveLeft -> { game with Entities = Laser.pushLaserLeft game.Entities }
+      | MoveRight -> { game with Entities = Laser.pushLaserRight game.Entities }
+      | StopMoveRight -> { game with Entities = Laser.stopPushingLaserRight game.Entities }
+      | StopMoveLeft -> { game with Entities = Laser.stopPushingLaserLeft game.Entities }
+      | Update timeSinceGameStarted -> updateGame game timeSinceGameStarted
+      | Shoot -> addBullet game
 
-let initialGame = [ initialLaser ] @ initialInvaders |> createGame
+  let initialInvaders = [0..(Invasion.columns * Invasion.rows) - 1]
+                        |> List.map (positionAndTypeForInvaderAtIndex >> Invader.create)
+
+  let initialLaser = Laser.create { X = 105.; Y = 216. }
+
+  let initialGame = [ initialLaser ] @ initialInvaders |> createGame
+
+(*
+- Leave Game as is, and in the updateGame function filter and copy, then reconstruct entity list at end of update
+-- Upsides: Easy tests, since you only have entities you care about, game structure is pretty fixed and you don't get the "update every test problem"
+-- Downsides: Finds and filters, plus copies. No representation of what's expected in the game.
+- Make the game better reflect the structure.
+-- Positives: No copies and filters. Straightforward structure. Entities as a list gets constructed in a function as needed, and could be memoized. All the functions can use the specific types.
+-- Downsides: option types for bullet, missile, laser. Each test has to update the structure, so you'll need create functions for the game to insulate from that. You'll need to change all the tests.
+- Use inheritance
+-- Upsides: You get to use the entity list and all the functions can only take a needed subclass. No copies. No entity duplication (you're basically using inheritance here)
+-- Downsides: Inheritance. You've still got to do all the filtering. Inheritance.
+- Make any function take an entity and properties seperate, in a tuple. Create specific tuples so you get compile time checks.
+-- No extra silly types. Actually this is probably what you should do. You get the type safety without noise, copies or inheritance. It's definitely a work aroound though.
+*)

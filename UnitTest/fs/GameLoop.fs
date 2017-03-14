@@ -1,7 +1,7 @@
-namespace Test
+module Test.GameLoop
 
 open Fable.Core.Testing
-open SpaceInvaders.GameLoop
+open Engine
 
 [<TestFixture>]
 module GameLoop =
@@ -24,26 +24,26 @@ module GameLoop =
 
     [<Test>]
     let ``creates an updater that encapsulates updating the game state`` () =
-        let event = 10. |> Tick
-        let eventHandler = createGameEventHandler updateFunc gameAsListOfEvents
+        let event = 10. |> GameLoop.Tick
+        let eventHandler = GameLoop.createGameEventHandler updateFunc gameAsListOfEvents
         let currentState = eventHandler event
 
         equal true ([event] = currentState)
 
     [<Test>]
     let ``updater uses the initial game`` () =
-        let event = 10. |> Tick
+        let event = 10. |> GameLoop.Tick
         let updatedState = event :: gameAsListOfEvents
-        let eventHandler = createGameEventHandler updateFunc updatedState
+        let eventHandler = GameLoop.createGameEventHandler updateFunc updatedState
         let currentState = eventHandler event
 
         equal true ([event; event] = currentState)
 
     [<Test>]
     let ``updater keeps track of all the events`` () =
-        let eventOne = 10. |> Tick
-        let eventTwo = 20. |> Tick
-        let eventHandler = createGameEventHandler updateFunc gameAsListOfEvents
+        let eventOne = 10. |> GameLoop.Tick
+        let eventTwo = 20. |> GameLoop.Tick
+        let eventHandler = GameLoop.createGameEventHandler updateFunc gameAsListOfEvents
 
         eventHandler eventOne |> ignore
         let finalState = eventHandler eventTwo
@@ -52,24 +52,24 @@ module GameLoop =
 
     [<Test>]
     let ``requests a frame immediately on being called`` () =
-        start requestFrame ignore ignore
+        GameLoop.start requestFrame ignore ignore
 
         List.length callbacks |> equal 1
 
     [<Test>]
     let ``request frame will (eventually) request another frame`` () =
-        start requestFrame ignore ignore
+        GameLoop.start requestFrame ignore ignore
         List.head callbacks <| 1.
 
         List.length callbacks |> equal 2
 
     [<Test>]
     let ``when the loop is started the update is called with 0`` () =
-        let eventHandler = createGameEventHandler updateFunc gameAsListOfEvents
+        let eventHandler = GameLoop.createGameEventHandler updateFunc gameAsListOfEvents
 
-        start requestFrame eventHandler ignore
+        GameLoop.start requestFrame eventHandler ignore
 
-        let expectedEvent = 0. |> Tick
+        let expectedEvent = 0. |> GameLoop.Tick
         equal true ([expectedEvent] = gameAsListOfEvents)
 
     [<Test>]
@@ -77,9 +77,9 @@ module GameLoop =
         let mutable renderedGame = []
         let renderer game =
             renderedGame <- game
-        let eventHandler = createGameEventHandler updateFunc gameAsListOfEvents
+        let eventHandler = GameLoop.createGameEventHandler updateFunc gameAsListOfEvents
 
-        start requestFrame eventHandler renderer
+        GameLoop.start requestFrame eventHandler renderer
 
-        let expectedGame = Tick 0.
+        let expectedGame = GameLoop.Tick 0.
         equal true ([expectedGame] = renderedGame)

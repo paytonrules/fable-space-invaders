@@ -1,7 +1,7 @@
-module SpaceInvaders.Presentation
+module Presentation
 
-open SpaceInvaders.Game
-open SpaceInvaders.Image
+open SpaceInvaders
+open Image
 
 let presenter (renderer:(list<Image<'HTMLImage>> -> unit)) (imageLookup:(EntityProperties -> 'HTMLImage)) (game:Game) =
 
