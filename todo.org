@@ -22,22 +22,42 @@
    CLOSED: [2017-02-27 Mon 17:23]
 ** TODO Begin implementing the space invaders firing
 *** TODO Redesign, yet again
-**** TODO Setup everything in the game in a namespace
+**** DONE Setup everything in the game in a namespace
+     CLOSED: [2017-03-14 Tue 07:05]
 ***** You're trying to make it so you can differentiate between Game types and Entity types.
 ***** Making everything be a module you have to declare in the namespace SpaceInvaders, should improve readability greatly. This will be a huuuuuuuge commit.
 ***** DONE Get the Game.fs into the namespace SpaceInvaders, rather than being an open module
       CLOSED: [2017-03-12 Sun 10:13]
-***** TODO Make the Unit tests compile/pass
-***** TODO Make sure Main compiles
-***** TODO Make sure the Property tests compile/run
-***** TODO Look at the app
-***** TODO Move Constraints into Game.fs, with namespace
-***** TODO EventMapping/GameLoop/Image do not follow this convention. Decide if you want to
-**** TODO Setup Game to not have a list of entities, but a true sructuretrue sructuretrue sructuretrue sructuretrue sructuretrue sructuretrue sructuretrue sructuretrue structure
-**** TODO Make each function either take a specific type or just the entity + properties as a tuple
-***** Probably the second, as it reduces duplication. You can use single case discriminated unions for cleaner types.
-***** Althought the first has better compiler safety, as you can't have a mismatched entity-tuple pairing
-**** TODO Entities as a function on game instead of a field
+***** DONE Make the Unit tests compile/pass
+      CLOSED: [2017-03-14 Tue 07:03]
+***** DONE Make sure Main compiles
+      CLOSED: [2017-03-14 Tue 07:03]
+***** DONE Make sure the Property tests compile/run
+      CLOSED: [2017-03-14 Tue 07:03]
+***** DONE Look at the app
+      CLOSED: [2017-03-14 Tue 07:04]
+***** DONE Move Constraints into Game.fs, with namespace
+      CLOSED: [2017-03-14 Tue 07:04]
+***** DONE EventMapping/GameLoop/Image do not follow this convention. Decide if you want to
+      CLOSED: [2017-03-14 Tue 07:04]
+**** TODO Setup Game to not have a list of entities, but a true structure
+***** DONE Add Laser/Bullets/Invaders to the game
+      CLOSED: [2017-03-14 Tue 07:43]
+***** TODO Remove the Laser from the Entities list
+****** DONE Start by modifying moveEntities to move the laser seperately
+       CLOSED: [2017-03-15 Wed 08:16]
+****** DONE don't call findLaser in update, use the laser
+       CLOSED: [2017-03-15 Wed 08:16]
+****** DONE Pass a Laser (as an entity) to the laser functions (Push)
+       CLOSED: [2017-03-15 Wed 08:57]
+****** DONE Remove the laser from the entities list in the tests and the default game
+       CLOSED: [2017-03-15 Wed 09:13]
+****** TODO Change the Presentation function to re-draw Laser
+****** TODO Fix your property based tests
+***** TODO Ditto Bullets
+***** TODO Ditto Invaders (add them to Invasion methinks)
+**** TODO Make each function either take a specific type
+***** You may need to do further breaking up of modules (possibly files). See here: https://fsharpforfunandprofit.com/posts/recipe-part3/
 ** TODO Invaders shoot bullets
 *** TODO Implement each of the types you already defined
 *** TODO Add lookups for the missle
