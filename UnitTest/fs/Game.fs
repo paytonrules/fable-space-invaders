@@ -316,16 +316,13 @@ module InvaderBulletCollision =
 
 
 module LaserTest =
-    let findLaser entities =
-        match SpaceInvaders.Game.findLaser entities with
-        | Some laser -> laser
-        | None -> failwith "No Laser Found"
-
-    let findLaserProperties entities =
-        let laser = findLaser entities
-        match laser.Properties with
-        | Laser props -> props
-        | _ -> failwith "Laser did not have laser properties which is impossible"
+    let findLaserProperties game =
+        match game.Laser with
+        | None -> failwith "No laser found"
+        | Some laser ->
+          match laser.Properties with
+          | Laser props -> props
+          | _ -> failwith "Laser did not have laser properties which is impossible"
 
 [<TestFixture>]
 module MovingLaser =
@@ -342,7 +339,7 @@ module MovingLaser =
         let game = Game.createGame <| Some laser <| [laser]
 
         let updatedGame = Game.update game MoveLeft
-        let newLaser = LaserTest.findLaserProperties updatedGame.Entities
+        let newLaser = LaserTest.findLaserProperties updatedGame
         equal true newLaser.LeftForce
 
     [<Test>]
@@ -350,7 +347,7 @@ module MovingLaser =
         let game = Game.createGame <| Some laser <| [laser]
 
         let updatedGame = Game.update game MoveRight
-        let newLaser = LaserTest.findLaserProperties updatedGame.Entities
+        let newLaser = LaserTest.findLaserProperties updatedGame
         equal true newLaser.RightForce
 
     [<Test>]
@@ -361,7 +358,7 @@ module MovingLaser =
         let game = Game.createGame <| Some movingRightLaser <| [movingRightLaser]
 
         let updatedGame = Game.update game StopMoveRight
-        let newLaser = LaserTest.findLaserProperties updatedGame.Entities
+        let newLaser = LaserTest.findLaserProperties updatedGame
         equal false newLaser.RightForce
 
     [<Test>]
@@ -372,7 +369,7 @@ module MovingLaser =
         let game = Game.createGame <| Some movingLeftLaser <| [movingLeftLaser]
 
         let updatedGame = Game.update game StopMoveLeft
-        let newLaser = LaserTest.findLaserProperties updatedGame.Entities
+        let newLaser = LaserTest.findLaserProperties updatedGame
         equal false newLaser.LeftForce
 
 [<TestFixture>]

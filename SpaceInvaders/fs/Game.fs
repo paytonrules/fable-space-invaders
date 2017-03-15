@@ -243,17 +243,26 @@ module Laser =
             Properties = { LeftForce = false; RightForce = false} |> Laser
         }
 
-    let pushLaser entities update =
-        entities
-        |> List.map (fun entity ->
-                        match entity.Properties with
-                        | Laser prop -> { entity with Properties = update prop |> Laser  }
-                        | _ -> entity)
+    // These push functions are gross, but until the laser functions take a
+    // laser and not an entity, I'm not sure I have something better
+    let pushLaser laser forceUpdater =
+        laser
+        |> Option.map (fun laser ->
+                        match laser.Properties with
+                        | Laser prop -> { laser with Properties = forceUpdater prop |> Laser  }
+                        | _ -> laser)
 
-    let pushLaserLeft entities = pushLaser entities (fun e -> {e with LeftForce = true })
-    let pushLaserRight entities = pushLaser entities (fun e -> {e with RightForce = true })
-    let stopPushingLaserRight entities = pushLaser entities (fun e -> {e with RightForce = false })
-    let stopPushingLaserLeft entities = pushLaser entities (fun e -> {e with LeftForce = false })
+    let pushLaserLeft laser =
+        pushLaser laser (fun e -> {e with LeftForce = true })
+
+    let pushLaserRight laser =
+        pushLaser laser (fun e -> {e with RightForce = true })
+
+    let stopPushingLaserRight laser =
+        pushLaser laser (fun e -> {e with RightForce = false })
+
+    let stopPushingLaserLeft laser =
+        pushLaser laser (fun e -> {e with LeftForce = false })
 
     let laserDirection laser =
         let someDirection = properties laser
@@ -441,10 +450,10 @@ module Game =
 
   let update game event =
       match event with
-      | MoveLeft -> { game with Entities = Laser.pushLaserLeft game.Entities }
-      | MoveRight -> { game with Entities = Laser.pushLaserRight game.Entities }
-      | StopMoveRight -> { game with Entities = Laser.stopPushingLaserRight game.Entities }
-      | StopMoveLeft -> { game with Entities = Laser.stopPushingLaserLeft game.Entities }
+      | MoveLeft -> { game with Laser = Laser.pushLaserLeft game.Laser }
+      | MoveRight -> { game with Laser = Laser.pushLaserRight game.Laser }
+      | StopMoveRight -> { game with Laser = Laser.stopPushingLaserRight game.Laser }
+      | StopMoveLeft -> { game with Laser = Laser.stopPushingLaserLeft game.Laser }
       | Update timeSinceGameStarted -> updateGame game timeSinceGameStarted
       | Shoot -> addBullet game
 
