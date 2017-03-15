@@ -380,13 +380,17 @@ module Game =
   let updateInvasion game invasion =
       { game with Invasion = invasion }
 
-  let moveEntities entities invasion delta =
-      entities |> List.map (fun entity ->
-                              match entity.Properties with
-                              | Laser _ -> Laser.update entity delta
-                              | Invader props -> Invader.update (entity, props) invasion delta
-                              | Bullet _ -> Bullet.update entity delta
-                              | _ -> Bullet.update entity delta)
+  let moveEntities game delta =
+      let movedEntities = game.Entities
+                          |> List.map (fun entity ->
+                                         match entity.Properties with
+                                         | Laser _ -> Laser.update entity delta
+                                         | Invader props -> Invader.update (entity, props) game.Invasion delta
+                                         | Bullet _ -> Bullet.update entity delta
+                                         | _ -> Bullet.update entity delta)
+
+      let newLaser = game.Laser |> Option.map (fun laser -> Laser.update laser delta)
+      { game with Entities = movedEntities; Laser = newLaser}
 
   let isPastTheTopOfTheScreen entity =
       entity.Position.Y + (float entity.Bounds.Height) < (float Constraints.Bounds.Top)
@@ -420,16 +424,16 @@ module Game =
 
   let updateGame game timeSinceGameStarted =
       let delta = (timeSinceGameStarted - game.LastUpdate)
-      let movedEntities = moveEntities game.Entities game.Invasion delta
-      let laser = findLaser movedEntities
+      let gameWithMovedEntities = moveEntities game delta
 
-      let (bullet, invaders) = findBullet movedEntities
+      let (bullet, invaders) = findBullet gameWithMovedEntities.Entities
                               |> removeOffscreenBullet
                               |> afterCollision
-                              <| Invasion.invadersFrom movedEntities
+                              <| Invasion.invadersFrom gameWithMovedEntities.Entities
 
-      { game with Entities = List.map Some invaders @ [bullet] @ [laser]
+      { game with Entities = List.map Some invaders @ [bullet]
                             |> List.choose id;
+                  Laser = gameWithMovedEntities.Laser;
                   Invasion = game.Invasion
                             |> changeInvasionDirection invaders <| delta
                             |> updateTimeSinceLastMove <| delta;
@@ -450,17 +454,3 @@ module Game =
   let initialLaser = Laser.create { X = 105.; Y = 216. }
 
   let initialGame =  createGame <| Some(initialLaser) <| initialInvaders
-
-(*
-- Leave Game as is, and in the updateGame function filter and copy, then reconstruct entity list at end of update
--- Upsides: Easy tests, since you only have entities you care about, game structure is pretty fixed and you don't get the "update every test problem"
--- Downsides: Finds and filters, plus copies. No representation of what's expected in the game.
-- Make the game better reflect the structure.
--- Positives: No copies and filters. Straightforward structure. Entities as a list gets constructed in a function as needed, and could be memoized. All the functions can use the specific types.
--- Downsides: option types for bullet, missile, laser. Each test has to update the structure, so you'll need create functions for the game to insulate from that. You'll need to change all the tests.
-- Use inheritance
--- Upsides: You get to use the entity list and all the functions can only take a needed subclass. No copies. No entity duplication (you're basically using inheritance here)
--- Downsides: Inheritance. You've still got to do all the filtering. Inheritance.
-- Make any function take an entity and properties seperate, in a tuple. Create specific tuples so you get compile time checks.
--- No extra silly types. Actually this is probably what you should do. You get the type safety without noise, copies or inheritance. It's definitely a work aroound though.
-*)

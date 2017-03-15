@@ -329,7 +329,7 @@ module LaserTest =
 
 [<TestFixture>]
 module MovingLaser =
-    let defaultLaserProperties = { LeftForce = false; RightForce = false } |> Laser
+    let defaultLaserProperties = {LeftForce = false; RightForce = false} |> Laser
 
     let laser = {
         Position = { X = 0.; Y = 1. };
@@ -338,7 +338,7 @@ module MovingLaser =
     }
 
     [<Test>]
-    let ``move left applies left force to the laser`` () =
+    let ``move left event applies left force to the laser`` () =
         let game = Game.createGame <| Some laser <| [laser]
 
         let updatedGame = Game.update game MoveLeft
@@ -390,12 +390,8 @@ module UpdatingLaser =
 
     [<Test>]
     let ``update a laser with no forces, it stays in the same place`` () =
-        let game = Game.createGame <| Some laser <| [laser]
+        let newLaser = Laser.update laser 10.
 
-        let updateEvent = Event.Update 10.
-        let updatedGame = Game.update game updateEvent
-
-        let newLaser = LaserTest.findLaser updatedGame.Entities
         equal newLaser.Position laser.Position
 
     [<Test>]
@@ -403,54 +399,33 @@ module UpdatingLaser =
         let properties = { RightForce = true; LeftForce = false } |> Laser
         let rightForceLaser = Laser.updateProperties laser properties
 
-        let game = Game.createGame <| Some rightForceLaser <| [rightForceLaser]
+        let newLaser = Laser.update rightForceLaser 1.
 
-        let updateEvent = Event.Update 1.
-        let updatedGame = Game.update game updateEvent
-
-        let newLaser = LaserTest.findLaser updatedGame.Entities
         equal newLaser.Position.X (rightForceLaser.Position.X + Laser.speedPerMillisecond)
 
     [<Test>]
     let ``account for delta when moving the laser`` () =
         let properties = { RightForce = true; LeftForce = false } |> Laser
         let rightForceLaser = Laser.updateProperties laser properties
-        let originalGame = Game.createGame <| Some rightForceLaser <| [rightForceLaser]
 
-        let game = { originalGame with LastUpdate = 1.}
-
-        let updateEvent = Event.Update 3.
-        let updatedGame = Game.update game updateEvent
-
-        let newLaser = LaserTest.findLaser updatedGame.Entities
+        let newLaser = Laser.update rightForceLaser 2.
         equal newLaser.Position.X (rightForceLaser.Position.X + (2. * Laser.speedPerMillisecond))
 
     [<Test>]
     let ``update a laser with left force, move to the left`` () =
         let laserProperties = { RightForce = false; LeftForce = true } |> Laser
         let leftForceLaser = Laser.updateProperties laser laserProperties
-        let originalGame = Game.createGame <| Some leftForceLaser <| [leftForceLaser]
 
-        let game = { originalGame with LastUpdate = 1. }
-
-        let updateEvent = Event.Update 3.
-        let updatedGame = Game.update game updateEvent
-
-        let newLaser = LaserTest.findLaser updatedGame.Entities
+        let newLaser = Laser.update leftForceLaser 2.
         equal newLaser.Position.X (leftForceLaser.Position.X - (2. * Laser.speedPerMillisecond))
 
     [<Test>]
     let ``update a laser with both forces, go nowhere`` () =
         let laserProperties = { RightForce = true; LeftForce = true } |> Laser
         let stuckLaser = Laser.updateProperties laser laserProperties
-        let originalGame = Game.createGame <| Some stuckLaser <| [stuckLaser]
 
-        let game = { originalGame with LastUpdate = 1.}
+        let newLaser = Laser.update stuckLaser 2.
 
-        let updateEvent = Event.Update 3.
-        let updatedGame = Game.update game updateEvent
-
-        let newLaser = LaserTest.findLaser updatedGame.Entities
         equal newLaser.Position.X stuckLaser.Position.X
 
     [<Test>]
@@ -460,11 +435,8 @@ module UpdatingLaser =
         let leftLaser = { laser with Position = leftPosition }
                         |> Laser.updateProperties <| laserProperties
 
-        let game = Game.createGame <| Some leftLaser <| [leftLaser]
-        let updateEvent = Event.Update 3.
-        let updatedGame = Game.update game updateEvent
+        let newLaser = Laser.update leftLaser 1.
 
-        let newLaser = LaserTest.findLaser updatedGame.Entities
         equal newLaser.Position.X leftLaser.Position.X
 
     [<Test>]
@@ -475,12 +447,43 @@ module UpdatingLaser =
         let laserAtRightBorder = { laser with Position = rightPosition }
                                  |> Laser.updateProperties <| laserProperties
 
-        let game = Game.createGame <| Some laserAtRightBorder <| [laserAtRightBorder]
-        let updateEvent = Event.Update 3.
-        let updatedGame = Game.update game updateEvent
+        let newLaser = Laser.update laserAtRightBorder 2.
 
-        let newLaser = LaserTest.findLaser updatedGame.Entities
         equal newLaser.Position.X laserAtRightBorder.Position.X
+
+    [<Test>]
+    let ``moveEntities moves the laser`` () =
+        let properties = { RightForce = true; LeftForce = false } |> Laser
+        let rightForceLaser = Laser.updateProperties laser properties
+        let game = Game.createGame <| Some(rightForceLaser) <| []
+
+        let newGame = Game.moveEntities game 1.
+
+        match newGame.Laser with
+        | None -> failwith "There is no laser present."
+        | Some newLaser ->
+            (rightForceLaser.Position.X + Laser.speedPerMillisecond)
+            |> equal newLaser.Position.X
+
+
+    [<Test>]
+    let ``Game.Update moves the laser`` () =
+        let properties = { RightForce = true; LeftForce = false } |> Laser
+        let rightForceLaser = Laser.updateProperties laser properties
+        let game = Game.createGame <| Some(rightForceLaser) <| []
+
+        let newGame = Game.updateGame game 1.
+
+        match newGame.Laser with
+        | None -> failwith "There is no laser present."
+        | Some newLaser ->
+            (rightForceLaser.Position.X + Laser.speedPerMillisecond)
+            |> equal newLaser.Position.X
+
+    [<Test>]
+    let ``Game.update should have some way to be sure you properly calculate delta`` () = ()
+
+
 
 [<TestFixture>]
 module ShootBullets =
