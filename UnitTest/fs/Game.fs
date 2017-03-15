@@ -481,9 +481,23 @@ module UpdatingLaser =
             |> equal newLaser.Position.X
 
     [<Test>]
-    let ``Game.update should have some way to be sure you properly calculate delta`` () = ()
+    let ``Game.update should apply the delta when moving the laser`` () =
+        let stillLaser = laser
+        let properties = { RightForce = true; LeftForce = false } |> Laser
+        let rightForceLaser = Laser.updateProperties laser properties
+        let oneUpdate = Game.createGame <| Some(stillLaser) <| []
+                        |> Game.updateGame <| 1.
+        let gameWithMovingLaser = { oneUpdate with Laser = Some(rightForceLaser) }
 
+        let finalGame = Game.updateGame gameWithMovingLaser 3.
 
+        // Note the 2. multiplier is because update 1 happened at 1.,
+        // and the second at 3.
+        match finalGame.Laser with
+        | None -> failwith "There is no laser present."
+        | Some newLaser ->
+            (rightForceLaser.Position.X + (2. * Laser.speedPerMillisecond))
+            |> equal newLaser.Position.X
 
 [<TestFixture>]
 module ShootBullets =
