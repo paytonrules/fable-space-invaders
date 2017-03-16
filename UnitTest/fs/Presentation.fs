@@ -33,6 +33,19 @@ module Presentation =
         renderedImages <- []
 
     [<Test>]
+    let ``a laser is displayed`` () =
+        let laser = Laser.create { X = 0.; Y = 0. }
+        let game = Game.createGame <| Some(laser) <| []
+
+        presenter' game |> ignore
+
+        let laserImage = {
+            Image = "laser";
+            Position = { X = 0.; Y = 0.}
+        }
+        equal renderedImages [laserImage]
+
+    [<Test>]
     let ``every kind of entity gets drawn from the lookup table`` () =
         let entities = [
             Laser.create { X = 0.; Y = 0.};

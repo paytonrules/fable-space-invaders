@@ -335,16 +335,6 @@ module Game =
       | Bullet e -> true
       | _ -> false
 
-  let findLaser entities =
-      let isLaser entity =
-          match entity.Properties with
-          | Laser e -> true
-          | _ -> false
-
-      entities
-      |> List.filter isLaser
-      |> (function | [laser] -> Some laser | _ -> None)
-
   let findBullet entities =
       entities
       |> List.filter isBullet
@@ -352,7 +342,7 @@ module Game =
 
   let addBullet game =
       match findBullet game.Entities with
-      | None -> match findLaser game.Entities with
+      | None -> match game.Laser with
                 | Some laser ->
                   let offset = { X = Laser.midpoint;
                                 Y = (float -Bullet.Height) }
@@ -363,7 +353,6 @@ module Game =
       | Some _ -> game
 
   let positionForInvaderAtIndex i =
-
       let row = i / Invasion.columns |> float
       let column = i % Invasion.columns |> float
       { X = column * Invasion.columnWidth; Y = row * Invasion.rowHeight }

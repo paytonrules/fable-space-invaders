@@ -505,7 +505,7 @@ module ShootBullets =
                        LeftForce = false } |> Laser
     }
 
-    let game = Game.createGame <| Some requiredLaser <| [requiredLaser]
+    let game = Game.createGame <| Some requiredLaser <| []
 
     let findBullet entities =
         let bullet = SpaceInvaders.Game.findBullet entities
@@ -538,7 +538,7 @@ module ShootBullets =
     [<Test>]
     let ``the bullet starts at the laser's nozzle`` () =
         let laser = Laser.create { X = 20.; Y = 30.; }
-        let game = Game.createGame <| Some laser <| [laser]
+        let game = Game.createGame <| Some laser <| []
 
         let updatedGame = Game.update game Shoot
 

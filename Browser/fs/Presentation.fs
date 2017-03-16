@@ -15,4 +15,12 @@ let presenter (renderer:(list<Image<'HTMLImage>> -> unit)) (imageLookup:(EntityP
                                      imageLookup entity.Properties
                                      |> positionImage <| entity )
 
-    renderer imagesToDraw
+    let laserImage = game.Laser |> Option.map (fun laser ->
+                                                imageLookup laser.Properties
+                                                |> positionImage <| laser)
+
+    let images = match laserImage with
+                 | Some image -> List.append imagesToDraw [image]
+                 | None -> imagesToDraw
+
+    renderer images
