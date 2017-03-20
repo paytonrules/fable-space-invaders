@@ -320,7 +320,7 @@ module Bullet =
 
 type Game = {
     Laser: Entity option;
-    Bullets: Entities;
+    Bullet: Entity option;
     Entities: Entities;
     LastUpdate: Delta;
     Invasion: Invasion;
@@ -369,7 +369,7 @@ module Game =
   let createGame laser entities =
       {
           Laser = laser;
-          Bullets = [];
+          Bullet = None;
           Entities = entities;
           LastUpdate = 0.;
           Invasion = Invasion.create entities
@@ -382,13 +382,15 @@ module Game =
       let movedEntities = game.Entities
                           |> List.map (fun entity ->
                                          match entity.Properties with
-                                         | Laser _ -> Laser.update entity delta
                                          | Invader props -> Invader.update (entity, props) game.Invasion delta
-                                         | Bullet _ -> Bullet.update entity delta
                                          | _ -> Bullet.update entity delta)
 
       let newLaser = game.Laser |> Option.map (fun laser -> Laser.update laser delta)
-      { game with Entities = movedEntities; Laser = newLaser}
+      let newBullet = game.Bullet |> Option.map (fun bullet -> Bullet.update bullet delta )
+
+      { game with Entities = movedEntities;
+                  Laser = newLaser;
+                  Bullet = newBullet }
 
   let isPastTheTopOfTheScreen entity =
       entity.Position.Y + (float entity.Bounds.Height) < (float Constraints.Bounds.Top)

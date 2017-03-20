@@ -314,7 +314,6 @@ module InvaderBulletCollision =
 
         List.isEmpty updatedInvaders |> equal true
 
-
 module LaserTest =
     let findLaserProperties game =
         match game.Laser with
@@ -447,21 +446,6 @@ module UpdatingLaser =
         let newLaser = Laser.update laserAtRightBorder 2.
 
         equal newLaser.Position.X laserAtRightBorder.Position.X
-
-    [<Test>]
-    let ``moveEntities moves the laser`` () =
-        let properties = { RightForce = true; LeftForce = false } |> Laser
-        let rightForceLaser = Laser.updateProperties laser properties
-        let game = Game.createGame <| Some(rightForceLaser) <| []
-
-        let newGame = Game.moveEntities game 1.
-
-        match newGame.Laser with
-        | None -> failwith "There is no laser present."
-        | Some newLaser ->
-            (rightForceLaser.Position.X + Laser.speedPerMillisecond)
-            |> equal newLaser.Position.X
-
 
     [<Test>]
     let ``Game.Update moves the laser`` () =
@@ -762,3 +746,36 @@ module InvasionDirection =
                    |> Game.updateGame <| timeToMove - 1.
 
         equal Invasion.Direction.Down game.Invasion.Direction
+
+module MoveEntities =
+
+    [<Test>]
+    let ``moves the laser`` () =
+        let laser = Laser.create {X = 10.; Y = 0.;}
+        let properties = { RightForce = true; LeftForce = false } |> Laser
+        let rightForceLaser = Laser.updateProperties laser properties
+        let game = Game.createGame <| Some(rightForceLaser) <| []
+
+        let newGame = Game.moveEntities game 1.
+
+        match newGame.Laser with
+        | None -> failwith "There is no laser present."
+        | Some newLaser ->
+            (rightForceLaser.Position.X + Laser.speedPerMillisecond)
+            |> equal newLaser.Position.X
+
+    [<Test>]
+    let ``moves the bullet when moving entities`` () =
+        let bullet = Bullet.createWithDefaultProperties { X = 0.; Y = 0. }
+        let properties = { Velocity = { X = 1.0; Y = 1.0 }} |> Bullet
+        let movingBullet = { bullet with Properties = properties}
+
+        let game = Game.createGame None []
+        let gameWithBullet = { game with Bullet = Some(movingBullet) }
+
+        let newGame = Game.moveEntities gameWithBullet 1.
+
+        match newGame.Bullet with
+        | None -> failwith "There is no bullet present"
+        | Some bullet ->
+            equal { X = 1.0; Y = 1.0 } bullet.Position
