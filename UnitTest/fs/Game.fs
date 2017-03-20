@@ -491,33 +491,11 @@ module ShootBullets =
 
     let game = Game.createGame <| Some requiredLaser <| []
 
-    let findBullet entities =
-        let bullet = SpaceInvaders.Game.findBullet entities
-        match bullet with
-        | None -> failwith "bullet not found"
-        | Some bullet -> bullet
-
     [<Test>]
     let ``a bullet is created on the Shoot event`` () =
         let updatedGame = Game.update game Shoot
 
-        let bullet = SpaceInvaders.Game.findBullet updatedGame.Entities
-
-        equal false (bullet = None)
-
-    [<Test>]
-    let ``a second bullet is not created if a bullet is present`` () =
-        let firstGame = Game.update game Shoot
-        let secondGame = Game.update firstGame Shoot
-
-        let bulletCount  = secondGame.Entities
-                           |> List.filter  (fun entity ->
-                                                match entity.Properties with
-                                                | Bullet _ -> true
-                                                | _ -> false)
-                           |> List.length
-
-        equal 1 bulletCount
+        equal true (updatedGame.Bullet <> None)
 
     [<Test>]
     let ``the bullet starts at the laser's nozzle`` () =
@@ -526,9 +504,27 @@ module ShootBullets =
 
         let updatedGame = Game.update game Shoot
 
-        let bullet = findBullet updatedGame.Entities
-        let expectedBulletPosition = { X = 26.; Y = 30. - (float Bullet.Height) ; }
-        equal expectedBulletPosition bullet.Position |> ignore
+        let bullet = updatedGame.Bullet
+        let expectedBulletPosition = { X = 20. + Laser.midpoint;
+                                       Y = 30. - (float Bullet.Height) ; }
+        match bullet with
+        | Some bullet ->
+            equal expectedBulletPosition bullet.Position |> ignore
+        | None -> failwith "No bulllet was created"
+
+    [<Test>]
+    let ``a second bullet is not created if a bullet is present`` () =
+        let gameWithBullet = Game.update game Shoot
+        let laser = Laser.create { X = 60.; Y = 10.; }
+        let gameWithMovedLaser = { gameWithBullet with Laser = Some(laser)}
+        let secondGame = Game.update gameWithMovedLaser Shoot
+
+        let originalBulletPosition = { X = Laser.midpoint;
+                                       Y = - (float Bullet.Height) }
+        match secondGame.Bullet with
+        | Some bullet ->
+            equal originalBulletPosition bullet.Position |> ignore
+        | None -> failwith "No bullet was created"
 
 [<TestFixture>]
 module UpdateBullet =

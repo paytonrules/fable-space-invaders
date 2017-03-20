@@ -341,14 +341,14 @@ module Game =
       |> (function | [bullet] -> Some bullet | _ -> None)
 
   let addBullet game =
-      match findBullet game.Entities with
+      match game.Bullet with
       | None -> match game.Laser with
                 | Some laser ->
                   let offset = { X = Laser.midpoint;
                                 Y = (float -Bullet.Height) }
                   let bullet = Vector2.add laser.Position offset
                               |> Bullet.createWithDefaultProperties
-                  { game with Entities = game.Entities @ [bullet] }
+                  { game with Bullet = Some(bullet) }
                 | None -> game
       | Some _ -> game
 
