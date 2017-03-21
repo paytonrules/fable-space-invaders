@@ -331,16 +331,6 @@ module Game =
 
     let invasionUpperLeftCorner = { X = 3.; Y = 30.}
 
-    let isBullet entity =
-        match entity.Properties with
-        | Bullet e -> true
-        | _ -> false
-
-    let findBullet entities =
-        entities
-        |> List.filter isBullet
-        |> (function | [bullet] -> Some bullet | _ -> None)
-
     let setBullet game bullet =
         { game with Bullet = Some(bullet) }
 
