@@ -43,7 +43,8 @@
 **** TODO Setup Game to not have a list of entities, but a true structure
 ***** DONE Add Laser/Bullets/Invaders to the game
       CLOSED: [2017-03-14 Tue 07:43]
-***** TODO Remove the Laser from the Entities list
+***** DONE Remove the Laser from the Entities list
+      CLOSED: [2017-03-18 Sat 10:16]
 ****** DONE Start by modifying moveEntities to move the laser seperately
        CLOSED: [2017-03-15 Wed 08:16]
 ****** DONE don't call findLaser in update, use the laser
@@ -52,13 +53,23 @@
        CLOSED: [2017-03-15 Wed 08:57]
 ****** DONE Remove the laser from the entities list in the tests and the default game
        CLOSED: [2017-03-15 Wed 09:13]
-****** TODO Change the Presentation function to re-draw Laser
-****** TODO Fix your property based tests
-***** TODO Ditto Bullets
+****** DONE Change the Presentation function to re-draw Laser
+       CLOSED: [2017-03-15 Wed 17:48]
+****** DONE HA! Fix that bullets don't appear
+       CLOSED: [2017-03-15 Wed 22:44]
+****** DONE Fix your property based tests
+       CLOSED: [2017-03-18 Sat 10:16]
+***** DONE Ditto Bullets
+      CLOSED: [2017-03-21 Tue 07:53]
+****** DONE Start by modifying moveEntities to move the bullet
+       CLOSED: [2017-03-21 Tue 07:53]
+****** DONE Make sure shooting a bullet creates a bullet
+       CLOSED: [2017-03-21 Tue 07:53]
 ***** TODO Ditto Invaders (add them to Invasion methinks)
 **** TODO Make each function either take a specific type
 ***** You may need to do further breaking up of modules (possibly files). See here: https://fsharpforfunandprofit.com/posts/recipe-part3/
-** TODO Invaders shoot bullets
+** TODO Fix the "How is this working" comment on creating bullets
+** TODO Invaders shoot missiles
 *** TODO Implement each of the types you already defined
 *** TODO Add lookups for the missle
 *** TODO Animate the missiles
@@ -78,4 +89,8 @@
 ** TODO Add the spaceships
 ** TODO Make sure the numbers match the official SI website
 ** TODO Get code coverage so you can see what property based tests to write
+** TODO Every Entity has a velocity
+*** Rather than have every entity type have their own update function, make one move entity function that moves a velocity, move a velocity into the entity
+*** The Invaders would never have velocity, having a specific update func to do their moves
+** TODO Learn lenses
 ** TODO Deploy to an actal website
