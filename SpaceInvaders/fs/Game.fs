@@ -125,13 +125,6 @@ module Invasion =
           SinceLastMove = 0.;
           Direction = Direction.Right }
 
-    let invadersFrom entities =
-        entities
-        |> List.filter ( fun entity ->
-                         match entity.Properties with
-                         | Invader _ -> true
-                         | _ -> false )
-
     let rightBounds invaders =
         invaders
         |> List.map (fun entity -> entity.Position.X + float entity.Bounds.Width)
@@ -142,8 +135,7 @@ module Invasion =
         |> List.map (fun entity -> entity.Position.X)
         |> List.min
 
-    let bounds entities =
-        let invaders = invadersFrom entities
+    let bounds invaders =
         if invaders |> List.isEmpty
         then { Right = 0.; Left = 0. }
         else { Right = rightBounds invaders; Left = leftBounds invaders }
