@@ -447,38 +447,6 @@ module UpdatingLaser =
 
         equal newLaser.Position.X laserAtRightBorder.Position.X
 
-    [<Test>]
-    let ``Game.Update moves the laser`` () =
-        let properties = { RightForce = true; LeftForce = false } |> Laser
-        let rightForceLaser = Laser.updateProperties laser properties
-        let game = Game.createGame <| Some(rightForceLaser) <| []
-
-        let newGame = Game.updateGame game 1.
-
-        match newGame.Laser with
-        | None -> failwith "There is no laser present."
-        | Some newLaser ->
-            (rightForceLaser.Position.X + Laser.speedPerMillisecond)
-            |> equal newLaser.Position.X
-
-    [<Test>]
-    let ``Game.update should apply the delta when moving the laser`` () =
-        let stillLaser = laser
-        let properties = { RightForce = true; LeftForce = false } |> Laser
-        let rightForceLaser = Laser.updateProperties laser properties
-        let oneUpdate = Game.createGame <| Some(stillLaser) <| []
-                        |> Game.updateGame <| 1.
-        let gameWithMovingLaser = { oneUpdate with Laser = Some(rightForceLaser) }
-
-        let finalGame = Game.updateGame gameWithMovingLaser 3.
-
-        // Note the 2. multiplier is because update 1 happened at 1.,
-        // and the second at 3.
-        match finalGame.Laser with
-        | None -> failwith "There is no laser present."
-        | Some newLaser ->
-            (rightForceLaser.Position.X + (2. * Laser.speedPerMillisecond))
-            |> equal newLaser.Position.X
 
 [<TestFixture>]
 module ShootBullets =
@@ -597,62 +565,6 @@ module BulletInvaderCollision =
         }
 
         Game.afterCollision bullet [] |> equal (bullet, [])
-
-[<TestFixture>]
-module UpdateFunc =
-    [<Test>]
-    let ``update the timestamp on each update`` () =
-        let game = { Game.createGame None [] with LastUpdate = 2.}
-
-        let newGame = Game.updateGame game 3.
-
-        equal newGame.LastUpdate 3.
-
-    [<Test>]
-    let ``after update, if the bullet is off the screen then remove it`` () =
-        let bulletBounds = { Height = 5; Width = 0}
-        let offTheTop = Constraints.Bounds.Top - bulletBounds.Height - 1
-        let position = { X = 0.; Y = float offTheTop }
-        let bullet = { Bullet.createWithDefaultProperties position with Bounds = bulletBounds }
-
-        let game = Game.updateGame (Game.createGame None [bullet]) 0.
-
-        equal List.empty game.Entities
-
-    [<Test>]
-    let ``if the bullet is still on the screen then keep it`` () =
-        let bulletBounds = { Height = 5; Width = 0}
-        let offTheTop = Constraints.Bounds.Top - bulletBounds.Height + 1
-        let position = { X = 0.; Y = float offTheTop }
-        let bullet = { Bullet.createWithDefaultProperties position with Bounds = bulletBounds }
-
-        let game = Game.updateGame (Game.createGame None [bullet]) 0.
-
-        equal [bullet] game.Entities
-
-    [<Test>]
-    let ``update the invasion step with the time since last move`` () =
-        let invasion = { SinceLastMove = 3.;
-                         Invaders = [];
-                         TimeToMove = 1000.;
-                         Direction = Invasion.Direction.Down }
-        let game = { Game.createGame None [] with Invasion = invasion }
-
-        let updatedGame = Game.updateGame game 2.
-
-        equal 5. updatedGame.Invasion.SinceLastMove
-
-    [<Test>]
-    let ``reset the invasion step time since last move after passing the time to move`` () =
-        let invasion = { SinceLastMove = 1.;
-                         TimeToMove = 1000.;
-                         Direction = Invasion.Direction.Down;
-                         Invaders = [] }
-        let game = { (Game.createGame None []) with Invasion = invasion }
-
-        let updatedGame = Game.updateGame game 1000.
-
-        equal 0. updatedGame.Invasion.SinceLastMove
 
 [<TestFixture>]
 module InvasionDirection =
@@ -775,3 +687,112 @@ module MoveEntities =
         | None -> failwith "There is no bullet present"
         | Some bullet ->
             equal { X = 1.0; Y = 1.0 } bullet.Position
+
+[<TestFixture>]
+module UpdateGame =
+    let laser = Laser.create { X = 10.; Y = 10.}
+    let bullet = Bullet.createWithDefaultProperties { X = 15.; Y = 100.}
+
+    [<Test>]
+    let ``Game.Update moves the laser`` () =
+        let properties = { RightForce = true; LeftForce = false } |> Laser
+        let rightForceLaser = Laser.updateProperties laser properties
+        let game = Game.createGame <| Some(rightForceLaser) <| []
+
+        let newGame = Game.updateGame game 1.
+
+        match newGame.Laser with
+        | None -> failwith "There is no laser present."
+        | Some newLaser ->
+            (rightForceLaser.Position.X + Laser.speedPerMillisecond)
+            |> equal newLaser.Position.X
+
+    [<Test>]
+    let ``Game.update should apply the delta when moving the laser`` () =
+        let stillLaser = laser
+        let properties = { RightForce = true; LeftForce = false } |> Laser
+        let rightForceLaser = Laser.updateProperties laser properties
+        let oneUpdate = Game.createGame <| Some(stillLaser) <| []
+                        |> Game.updateGame <| 1.
+        let gameWithMovingLaser = { oneUpdate with Laser = Some(rightForceLaser) }
+
+        let finalGame = Game.updateGame gameWithMovingLaser 3.
+
+        // Note the 2. multiplier is because update 1 happened at 1.,
+        // and the second at 3.
+        match finalGame.Laser with
+        | None -> failwith "There is no laser present."
+        | Some newLaser ->
+            (rightForceLaser.Position.X + (2. * Laser.speedPerMillisecond))
+            |> equal newLaser.Position.X
+
+    [<Test>]
+    let ``move the bullet on the update`` () =
+        let initialGame = Game.createGame <| None <| []
+
+        let game = Game.createGame None []
+                   |> Game.setBullet <| bullet
+                   |> Game.updateGame <| 1.
+
+        match game.Bullet with
+        | None -> failwith "There is no bullet present."
+        | Some newBullet ->
+            newBullet.Position |> equal <| Vector2.add bullet.Position Bullet.DefaultVelocity
+
+    [<Test>]
+    let ``update the timestamp on each update`` () =
+        let game = { Game.createGame None [] with LastUpdate = 2.}
+
+        let newGame = Game.updateGame game 3.
+
+        equal newGame.LastUpdate 3.
+
+    [<Test>]
+    let ``after update, if the bullet is off the screen then remove it`` () =
+        let bulletBounds = { Height = 5; Width = 0}
+        let offTheTop = Constraints.Bounds.Top - bulletBounds.Height - 1
+        let position = { X = 0.; Y = float offTheTop }
+        let bullet = { Bullet.createWithDefaultProperties position with Bounds = bulletBounds }
+
+        let game = Game.createGame None []
+                   |> Game.setBullet <| bullet
+                   |> Game.updateGame <| 0.
+
+        equal game.Bullet None
+
+    [<Test>]
+    let ``if the bullet is still on the screen then keep it`` () =
+        let bulletBounds = { Height = 5; Width = 0}
+        let offTheTop = Constraints.Bounds.Top - bulletBounds.Height + 1
+        let position = { X = 0.; Y = float offTheTop }
+        let bullet = { Bullet.createWithDefaultProperties position with Bounds = bulletBounds }
+
+        let game = Game.createGame None []
+                   |> Game.setBullet <| bullet
+                   |> Game.updateGame <| 0.
+
+        Some(bullet) |> equal game.Bullet
+
+    [<Test>]
+    let ``update the invasion step with the time since last move`` () =
+        let invasion = { SinceLastMove = 3.;
+                         Invaders = [];
+                         TimeToMove = 1000.;
+                         Direction = Invasion.Direction.Down }
+        let game = { Game.createGame None [] with Invasion = invasion }
+
+        let updatedGame = Game.updateGame game 2.
+
+        equal 5. updatedGame.Invasion.SinceLastMove
+
+    [<Test>]
+    let ``reset the invasion step time since last move after passing the time to move`` () =
+        let invasion = { SinceLastMove = 1.;
+                         TimeToMove = 1000.;
+                         Direction = Invasion.Direction.Down;
+                         Invaders = [] }
+        let game = { (Game.createGame None []) with Invasion = invasion }
+
+        let updatedGame = Game.updateGame game 1000.
+
+        equal 0. updatedGame.Invasion.SinceLastMove

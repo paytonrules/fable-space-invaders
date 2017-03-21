@@ -46,6 +46,20 @@ module Presentation =
         equal renderedImages [laserImage]
 
     [<Test>]
+    let ``a bullet is displayed`` () =
+        let bullet = Bullet.createWithDefaultProperties { X = 0.; Y = 0. }
+        let game = Game.createGame None []
+        let gameWithBullet = { game with Bullet = Some(bullet) }
+
+        presenter' gameWithBullet |> ignore
+
+        let bulletImage = {
+            Image = "bullet";
+            Position = { X = 0.; Y = 0.}
+        }
+        equal renderedImages [bulletImage]
+
+    [<Test>]
     let ``every kind of entity gets drawn from the lookup table`` () =
         let entities = [
             Laser.create { X = 0.; Y = 0.};

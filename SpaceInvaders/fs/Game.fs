@@ -299,6 +299,7 @@ module Laser =
 
 module Bullet =
     let Height = 4
+    let DefaultVelocity = { X = 0.; Y = -0.1 }
 
     let create position bulletProperties =
         { Properties = bulletProperties;
@@ -306,7 +307,7 @@ module Bullet =
           Bounds = { Width = 0; Height = 0 }} // How is this working?
 
     let createWithDefaultProperties position =
-        create position (Bullet { Velocity = { X = 0.; Y = -0.1 }})
+        create position (Bullet { Velocity = DefaultVelocity })
 
     let update bullet delta =
         let newPosition = match bullet.Properties with
@@ -328,129 +329,131 @@ type Game = {
 
 module Game =
 
-  let invasionUpperLeftCorner = { X = 3.; Y = 30.}
+    let invasionUpperLeftCorner = { X = 3.; Y = 30.}
 
-  let isBullet entity =
-      match entity.Properties with
-      | Bullet e -> true
-      | _ -> false
+    let isBullet entity =
+        match entity.Properties with
+        | Bullet e -> true
+        | _ -> false
 
-  let findBullet entities =
-      entities
-      |> List.filter isBullet
-      |> (function | [bullet] -> Some bullet | _ -> None)
+    let findBullet entities =
+        entities
+        |> List.filter isBullet
+        |> (function | [bullet] -> Some bullet | _ -> None)
 
-  let addBullet game =
-      match game.Bullet with
-      | None -> match game.Laser with
-                | Some laser ->
-                  let offset = { X = Laser.midpoint;
-                                Y = (float -Bullet.Height) }
-                  let bullet = Vector2.add laser.Position offset
-                              |> Bullet.createWithDefaultProperties
-                  { game with Bullet = Some(bullet) }
-                | None -> game
-      | Some _ -> game
+    let setBullet game bullet =
+        { game with Bullet = Some(bullet) }
 
-  let positionForInvaderAtIndex i =
-      let row = i / Invasion.columns |> float
-      let column = i % Invasion.columns |> float
-      { X = column * Invasion.columnWidth; Y = row * Invasion.rowHeight }
-      |> Vector2.add invasionUpperLeftCorner;
+    let addBullet game =
+        match game.Bullet with
+        | None -> match game.Laser with
+                  | Some laser ->
+                    let offset = { X = Laser.midpoint;
+                                  Y = (float -Bullet.Height) }
+                    let bullet = Vector2.add laser.Position offset
+                                |> Bullet.createWithDefaultProperties
+                    setBullet game bullet
+                  | None -> game
+        | Some _ -> game
 
-  let typeForInvaderAtIndex = function
-      | i when i < Invasion.columns * 2 -> Small
-      | i when i >= Invasion.columns * 2 && i < Invasion.columns * 4 -> Medium
-      | _ -> Large
+    let positionForInvaderAtIndex i =
+        let row = i / Invasion.columns |> float
+        let column = i % Invasion.columns |> float
+        { X = column * Invasion.columnWidth; Y = row * Invasion.rowHeight }
+        |> Vector2.add invasionUpperLeftCorner;
 
-  let positionAndTypeForInvaderAtIndex i =
-      (positionForInvaderAtIndex i, typeForInvaderAtIndex i)
+    let typeForInvaderAtIndex = function
+        | i when i < Invasion.columns * 2 -> Small
+        | i when i >= Invasion.columns * 2 && i < Invasion.columns * 4 -> Medium
+        | _ -> Large
 
-  let createGame laser entities =
-      {
-          Laser = laser;
-          Bullet = None;
-          Entities = entities;
-          LastUpdate = 0.;
-          Invasion = Invasion.create entities
-      }
+    let positionAndTypeForInvaderAtIndex i =
+        (positionForInvaderAtIndex i, typeForInvaderAtIndex i)
 
-  let updateInvasion game invasion =
-      { game with Invasion = invasion }
+    let createGame laser entities =
+        {
+            Laser = laser;
+            Bullet = None;
+            Entities = entities;
+            LastUpdate = 0.;
+            Invasion = Invasion.create entities
+        }
 
-  let moveEntities game delta =
-      let movedEntities = game.Entities
-                          |> List.map (fun entity ->
-                                         match entity.Properties with
-                                         | Invader props -> Invader.update (entity, props) game.Invasion delta
-                                         | _ -> Bullet.update entity delta)
+    let updateInvasion game invasion =
+        { game with Invasion = invasion }
 
-      let newLaser = game.Laser |> Option.map (fun laser -> Laser.update laser delta)
-      let newBullet = game.Bullet |> Option.map (fun bullet -> Bullet.update bullet delta )
+    let moveEntities game delta =
+        let movedEntities = game.Entities
+                            |> List.map (fun entity ->
+                                          match entity.Properties with
+                                          | Invader props -> Invader.update (entity, props) game.Invasion delta
+                                          | _ -> Bullet.update entity delta)
 
-      { game with Entities = movedEntities;
-                  Laser = newLaser;
-                  Bullet = newBullet }
+        let newLaser = game.Laser |> Option.map (fun laser -> Laser.update laser delta)
+        let newBullet = game.Bullet |> Option.map (fun bullet -> Bullet.update bullet delta )
 
-  let isPastTheTopOfTheScreen entity =
-      entity.Position.Y + (float entity.Bounds.Height) < (float Constraints.Bounds.Top)
+        { game with Entities = movedEntities;
+                    Laser = newLaser;
+                    Bullet = newBullet }
 
-  let removeOffscreenBullet bullet =
-      match bullet with
+    let isPastTheTopOfTheScreen entity =
+        entity.Position.Y + (float entity.Bounds.Height) < (float Constraints.Bounds.Top)
+
+    let removeOffscreenBullet = function
       | Some bullet when isPastTheTopOfTheScreen bullet -> None
       | Some bullet -> Some bullet
       | None -> None
 
-  let changeInvasionDirection invaders invasion delta =
-      if Invasion.isTimeToMove invasion delta
-      then Invasion.nextInvasionDirection invaders invasion
-      else invasion
+    let changeInvasionDirection invaders invasion delta =
+        if Invasion.isTimeToMove invasion delta
+        then Invasion.nextInvasionDirection invaders invasion
+        else invasion
 
-  let afterCollision bullet invaders =
-      match bullet with
-      | None -> (None, invaders)
-      | Some bullet ->
-          let invaders' = Invasion.removeShotInvaders invaders bullet
-          if List.length invaders = List.length invaders'
-          then (Some bullet, invaders)
-          else (None, invaders')
+    let afterCollision bullet invaders =
+        match bullet with
+        | None -> (None, invaders)
+        | Some bullet ->
+            let invaders' = Invasion.removeShotInvaders invaders bullet
+            if List.length invaders = List.length invaders'
+            then (Some bullet, invaders)
+            else (None, invaders')
 
-  let updateTimeSinceLastMove invasion delta =
+    let updateTimeSinceLastMove invasion delta =
       match invasion.SinceLastMove + delta with
       | sinceLastMove when sinceLastMove < invasion.TimeToMove ->
           { invasion with SinceLastMove = sinceLastMove }
       | _ ->
           { invasion with SinceLastMove = 0. }
 
-  let updateGame game timeSinceGameStarted =
-      let delta = (timeSinceGameStarted - game.LastUpdate)
-      let gameWithMovedEntities = moveEntities game delta
+    let updateGame game timeSinceGameStarted =
+        let delta = (timeSinceGameStarted - game.LastUpdate)
+        let gameWithMovedEntities = moveEntities game delta
 
-      let (bullet, invaders) = findBullet gameWithMovedEntities.Entities
-                              |> removeOffscreenBullet
-                              |> afterCollision
-                              <| Invasion.invadersFrom gameWithMovedEntities.Entities
+        let (bullet, invaders) = gameWithMovedEntities.Bullet
+                                 |> removeOffscreenBullet
+                                 |> afterCollision
+                                 <| Invasion.invadersFrom gameWithMovedEntities.Entities
 
-      { game with Entities = List.map Some invaders @ [bullet]
-                            |> List.choose id;
-                  Laser = gameWithMovedEntities.Laser;
-                  Invasion = game.Invasion
-                            |> changeInvasionDirection invaders <| delta
-                            |> updateTimeSinceLastMove <| delta;
-                  LastUpdate = timeSinceGameStarted }
+        { game with Entities = List.map Some invaders @ [bullet] |> List.choose id;
+                    Laser = gameWithMovedEntities.Laser;
+                    Bullet = bullet;
+                    Invasion = game.Invasion
+                               |> changeInvasionDirection invaders <| delta
+                               |> updateTimeSinceLastMove <| delta;
+                    LastUpdate = timeSinceGameStarted }
 
-  let update game event =
-      match event with
-      | MoveLeft -> { game with Laser = Laser.pushLaserLeft game.Laser }
-      | MoveRight -> { game with Laser = Laser.pushLaserRight game.Laser }
-      | StopMoveRight -> { game with Laser = Laser.stopPushingLaserRight game.Laser }
-      | StopMoveLeft -> { game with Laser = Laser.stopPushingLaserLeft game.Laser }
-      | Update timeSinceGameStarted -> updateGame game timeSinceGameStarted
-      | Shoot -> addBullet game
+    let update game event =
+        match event with
+        | MoveLeft -> { game with Laser = Laser.pushLaserLeft game.Laser }
+        | MoveRight -> { game with Laser = Laser.pushLaserRight game.Laser }
+        | StopMoveRight -> { game with Laser = Laser.stopPushingLaserRight game.Laser }
+        | StopMoveLeft -> { game with Laser = Laser.stopPushingLaserLeft game.Laser }
+        | Update timeSinceGameStarted -> updateGame game timeSinceGameStarted
+        | Shoot -> addBullet game
 
-  let initialInvaders = [0..(Invasion.columns * Invasion.rows) - 1]
-                        |> List.map (positionAndTypeForInvaderAtIndex >> Invader.create)
+    let initialInvaders = [0..(Invasion.columns * Invasion.rows) - 1]
+                          |> List.map (positionAndTypeForInvaderAtIndex >> Invader.create)
 
-  let initialLaser = Laser.create { X = 105.; Y = 216. }
+    let initialLaser = Laser.create { X = 105.; Y = 216. }
 
-  let initialGame =  createGame <| Some(initialLaser) <| initialInvaders
+    let initialGame =  createGame <| Some(initialLaser) <| initialInvaders
