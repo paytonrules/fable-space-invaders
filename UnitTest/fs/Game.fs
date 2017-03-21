@@ -577,9 +577,9 @@ module InvasionDirection =
 
     let timeToMove = 1000.
     let createGameWithInvasion invaders direction =
-        Game.createGame None invaders
+        Game.createGame None []
         |> Game.updateInvasion <| { Direction = direction;
-                                    Invaders = [];
+                                    Invaders = invaders;
                                     TimeToMove = timeToMove;
                                     SinceLastMove = 0. }
 

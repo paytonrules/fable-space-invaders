@@ -60,38 +60,29 @@ module Presentation =
         equal renderedImages [bulletImage]
 
     [<Test>]
-    let ``every kind of entity gets drawn from the lookup table`` () =
-        let entities = [
-            Laser.create { X = 0.; Y = 0.};
-            Bullet.createWithDefaultProperties { X = 0.; Y = 0.};
-            createMissile RandomMissile;
-            createMissile TrackingMissile;
-            createMissile PoweredMissile;
-            Invader.create ({X = 0.; Y = 0.}, Small)
+    let ``invaders get drawn`` () =
+        let invaders = [
+            Invader.create ({X = 10.; Y = 20.}, Small);
+            Invader.create ({X = 10.; Y = 20.}, Medium);
         ]
 
-        let game = Game.createGame None entities
+        let game = Game.createGame None invaders
         presenter' game |> ignore
 
-        // This is fairly icky - this will throw an exception if any of these
-        // are not rendered in the presenter function.
-        let images = ["laser"; "bullet"; "randommissile";
-                      "trackingmissile"; "poweredmissile"; "invader"];
-        let findImage image =
-            List.find (fun x -> x.Image = image) renderedImages |> ignore
-
-        List.iter findImage images
+        let expectedImages = ["invader"; "invader"]
+                             |> List.map (fun s -> { Image = s; Position = { X = 10.; Y = 20. }})
+        equal renderedImages expectedImages
 
     [<Test>]
     let ``it draws the entities at the position in the entity`` () =
-        let bullet =  Bullet.createWithDefaultProperties {X = 30.; Y = 40.}
         let laser = Laser.create { X = 10.; Y = 5. }
+        let invader = Invader.create({X = 30.; Y = 40.}, Small)
 
-        let game = Game.createGame None [ bullet; laser ]
+        let game = Game.createGame <| Some(laser) <| [ invader ]
 
         presenter' game |> ignore
 
-        let bulletImage = renderedImages |> List.find (fun x -> x.Image = "bullet")
+        let bulletImage = renderedImages |> List.find (fun x -> x.Image = "invader")
         equal bulletImage.Position {X = 30.; Y = 40.}
 
         let laserImage = renderedImages |> List.find (fun x -> x.Image = "laser")

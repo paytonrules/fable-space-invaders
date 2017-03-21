@@ -10,7 +10,7 @@ let presenter (renderer:(list<Image<'HTMLImage>> -> unit)) (imageLookup:(EntityP
          Position = {X = entity.Position.X;
                      Y = entity.Position.Y}}
 
-    let imagesToDraw = game.Entities
+    let imagesToDraw = game.Invasion.Invaders
                        |> List.map (fun entity ->
                                      imageLookup entity.Properties
                                      |> positionImage <| entity )

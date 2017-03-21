@@ -121,7 +121,7 @@ module Invasion =
 
     let create invaders =
         { TimeToMove = initialTimeToMove;
-          Invaders = [];
+          Invaders = invaders;
           SinceLastMove = 0.;
           Direction = Direction.Right }
 
@@ -322,7 +322,6 @@ module Bullet =
 type Game = {
     Laser: Entity option;
     Bullet: Entity option;
-    Entities: Entities;
     LastUpdate: Delta;
     Invasion: Invasion;
 }
@@ -360,30 +359,30 @@ module Game =
     let positionAndTypeForInvaderAtIndex i =
         (positionForInvaderAtIndex i, typeForInvaderAtIndex i)
 
-    let createGame laser entities =
+    let createGame laser invaders =
         {
             Laser = laser;
             Bullet = None;
-            Entities = entities;
             LastUpdate = 0.;
-            Invasion = Invasion.create entities
+            Invasion = Invasion.create invaders
         }
 
     let updateInvasion game invasion =
         { game with Invasion = invasion }
 
     let moveEntities game delta =
-        let movedEntities = game.Entities
+        let movedInvaders = game.Invasion.Invaders
                             |> List.map (fun entity ->
                                           match entity.Properties with
                                           | Invader props -> Invader.update (entity, props) game.Invasion delta
-                                          | _ -> Bullet.update entity delta)
+                                          | _ -> failwith "Invalid invader!")
 
+        let invasion = { game.Invasion with Invaders = movedInvaders }
         let newLaser = game.Laser |> Option.map (fun laser -> Laser.update laser delta)
         let newBullet = game.Bullet |> Option.map (fun bullet -> Bullet.update bullet delta )
 
-        { game with Entities = movedEntities;
-                    Laser = newLaser;
+        { game with Laser = newLaser;
+                    Invasion = invasion;
                     Bullet = newBullet }
 
     let isPastTheTopOfTheScreen entity =
@@ -422,12 +421,12 @@ module Game =
         let (bullet, invaders) = gameWithMovedEntities.Bullet
                                  |> removeOffscreenBullet
                                  |> afterCollision
-                                 <| Invasion.invadersFrom gameWithMovedEntities.Entities
+                                 <| gameWithMovedEntities.Invasion.Invaders
+        let newInvasion = { gameWithMovedEntities.Invasion with Invaders = invaders }
 
-        { game with Entities = List.map Some invaders @ [bullet] |> List.choose id;
-                    Laser = gameWithMovedEntities.Laser;
+        { game with Laser = gameWithMovedEntities.Laser;
                     Bullet = bullet;
-                    Invasion = game.Invasion
+                    Invasion = newInvasion
                                |> changeInvasionDirection invaders <| delta
                                |> updateTimeSinceLastMove <| delta;
                     LastUpdate = timeSinceGameStarted }
