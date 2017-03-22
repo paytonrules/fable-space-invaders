@@ -22,12 +22,6 @@ module Presentation =
 
     let presenter' = presenter renderer lookupImage
 
-    let createMissile t = {
-        Position = { X = 0.; Y = 0.}
-        Bounds = { Width = 0; Height = 0}
-        Properties = { Velocity = { X = 0.; Y = 0. } } |> MissileProperties |> t
-    }
-
     [<SetUp>]
     let setup () =
         renderedImages <- []

@@ -7,8 +7,8 @@ let presenter (renderer:(list<Image<'HTMLImage>> -> unit)) (imageLookup:(EntityP
 
     let positionImage (image:'HTMLImage) (entity:Entity) =
         {Image = image;
-         Position = {X = entity.Position.X;
-                     Y = entity.Position.Y}}
+         Position = {X = entity.Location.Position.X;
+                     Y = entity.Location.Position.Y}}
 
     let imagesToDraw = game.Invasion.Invaders
                        |> List.map (fun entity ->

@@ -46,9 +46,13 @@ type EntityProperties =
 | TrackingMissile of MissileProperties
 | PoweredMissile of MissileProperties
 
-type Entity  =  {
+type Box = {
     Position: Vector2;
     Bounds: Bounds;
+}
+
+type Entity  =  {
+    Location: Box;
     Properties: EntityProperties;
 }
 
@@ -91,20 +95,26 @@ module Vector2 =
 
 module Entity =
     let updatePosition entity position =
-        { entity with Position = position }
+        let location = { entity.Location with Position = position}
+        { entity with Location = location }
+
+    let updateBounds entity bounds =
+        let location = { entity.Location with Bounds = bounds}
+        { entity with Location = location }
 
     let updateXPos entity x =
-        { entity with Position = { X = x; Y = entity.Position.Y } }
+        let position = { X = x; Y = entity.Location.Position.Y }
+        updatePosition entity position
 
-    let bottom entity = (float entity.Bounds.Height + entity.Position.Y)
+    let bottom entity = (float entity.Location.Bounds.Height + entity.Location.Position.Y)
 
-    let right entity = (float entity.Bounds.Width + entity.Position.X)
+    let right entity = (float entity.Location.Bounds.Width + entity.Location.Position.X)
 
     let isOverlapping (entityOne:Entity) entityTwo =
-        not (entityTwo.Position.X > right entityOne
-              || right entityTwo < entityOne.Position.X
-              || entityTwo.Position.Y > bottom entityOne
-              || bottom entityTwo < entityOne.Position.Y)
+        not (entityTwo.Location.Position.X > right entityOne
+              || right entityTwo < entityOne.Location.Position.X
+              || entityTwo.Location.Position.Y > bottom entityOne
+              || bottom entityTwo < entityOne.Location.Position.Y)
 
 module Invasion =
     let columnWidth = 16.
@@ -127,12 +137,12 @@ module Invasion =
 
     let rightBounds invaders =
         invaders
-        |> List.map (fun entity -> entity.Position.X + float entity.Bounds.Width)
+        |> List.map (fun entity -> entity.Location.Position.X + float entity.Location.Bounds.Width)
         |> List.max
 
     let leftBounds invaders =
         invaders
-        |> List.map (fun entity -> entity.Position.X)
+        |> List.map (fun entity -> entity.Location.Position.X)
         |> List.min
 
     let bounds invaders =
@@ -195,8 +205,8 @@ module Invader =
     | Large -> { Width = 12; Height = 8 }
 
     let create (position, invaderType) =
-        { Position = position;
-          Bounds = bounds invaderType;
+        { Location = { Position= position;
+                       Bounds = bounds invaderType;}
           Properties = { InvaderState = Closed;
                         Type = invaderType} |> Invader};
 
@@ -205,9 +215,10 @@ module Invader =
     let update (invader, invaderProps) invasion delta =
         match Invasion.isTimeToMove invasion delta with
         | true ->
-          let newPosition = Vector2.add invader.Position invasion.Direction
+          let newPosition = Vector2.add invader.Location.Position invasion.Direction
+          let location = { invader.Location with Position = newPosition }
           let invaderProps = { invaderProps with InvaderState = toggleState invaderProps.InvaderState } |> Invader
-          { invader with Position = newPosition; Properties = invaderProps }
+          { invader with Location = location; Properties = invaderProps }
         | false -> invader
 
 module Laser =
@@ -230,8 +241,8 @@ module Laser =
 
     let create position =
         {
-            Position = position;
-            Bounds = bounds;
+            Location = { Position = position;
+                         Bounds = bounds; }
             Properties = { LeftForce = false; RightForce = false} |> Laser
         }
 
@@ -272,11 +283,11 @@ module Laser =
         direction * speedPerMillisecond * delta
 
     let calculateNextXpos laser movement =
-        laser.Position.X + movement
+        laser.Location.Position.X + movement
 
     let update laser delta =
         let maxRight = Constraints.Bounds.Right -
-                        laser.Bounds.Width |> float
+                        laser.Location.Bounds.Width |> float
         let xRange = (float Constraints.Bounds.Left, maxRight)
 
         let clampedX = laser
@@ -285,9 +296,10 @@ module Laser =
                     |> calculateNextXpos laser
                     |> clamp xRange
 
-        let newPosition = {laser.Position with X = clampedX }
+        let position = { laser.Location.Position with X = clampedX }
+        let location = { laser.Location with Position = position }
 
-        { laser with Position = newPosition }
+        { laser with Location = location }
 
 module Bullet =
     let Height = 4
@@ -295,21 +307,22 @@ module Bullet =
 
     let create position bulletProperties =
         { Properties = bulletProperties;
-          Position = position;
-          Bounds = { Width = 0; Height = 0 }} // How is this working?
+          Location = { Position = position;
+                       Bounds = { Width = 0; Height = 0 }}} // How is this working?
 
     let createWithDefaultProperties position =
         create position (Bullet { Velocity = DefaultVelocity })
 
     let update bullet delta =
-        let newPosition = match bullet.Properties with
-                          | Bullet properties ->
-                                properties.Velocity
-                                |> Vector2.scale <| delta
-                                |> Vector2.add bullet.Position
-                          | _ -> bullet.Position
+        let position = match bullet.Properties with
+                       | Bullet properties ->
+                          properties.Velocity
+                          |> Vector2.scale <| delta
+                          |> Vector2.add bullet.Location.Position
+                       | _ -> bullet.Location. Position
 
-        { bullet with Position = newPosition }
+        let location = { bullet.Location with Position = position }
+        { bullet with Location = location }
 
 type Game = {
     Laser: Entity option;
@@ -319,7 +332,6 @@ type Game = {
 }
 
 module Game =
-
     let invasionUpperLeftCorner = { X = 3.; Y = 30.}
 
     let setBullet game bullet =
@@ -331,7 +343,7 @@ module Game =
                   | Some laser ->
                     let offset = { X = Laser.midpoint;
                                   Y = (float -Bullet.Height) }
-                    let bullet = Vector2.add laser.Position offset
+                    let bullet = Vector2.add laser.Location.Position offset
                                 |> Bullet.createWithDefaultProperties
                     setBullet game bullet
                   | None -> game
@@ -378,7 +390,7 @@ module Game =
                     Bullet = newBullet }
 
     let isPastTheTopOfTheScreen entity =
-        entity.Position.Y + (float entity.Bounds.Height) < (float Constraints.Bounds.Top)
+        entity.Location.Position.Y + (float entity.Location.Bounds.Height) < (float Constraints.Bounds.Top)
 
     let removeOffscreenBullet = function
       | Some bullet when isPastTheTopOfTheScreen bullet -> None
