@@ -222,11 +222,27 @@ module Invader =
         | false -> invader
 
 module Laser =
+    type LaserEntity = {
+        Location: Box;
+        Properties: LaserProperties;
+    }
     let speedPerMillisecond = 0.200
     let bounds = { Width = 13; Height = 8 }
     let midpoint = (float bounds.Width) / 2. |> floor  // IOW - 6
+
+    let toEntity laser =
+        { Entity.Location = laser.Location
+          Properties = laser.Properties |> Laser }
+
+    let fromEntity (entity:Entity) =
+        match entity.Properties with
+        | Laser props ->
+            { LaserEntity.Location = entity.Location
+              Properties = props }
+        | _ -> failwith "converting non-laser entity to entity"
+
     let updateProperties laser properties =
-        { laser with Properties = properties }
+        { laser with LaserEntity.Properties = properties }
 
     let clamp minMax value =
         match value with
@@ -234,26 +250,18 @@ module Laser =
         | value when value > snd minMax -> snd minMax
         | _ -> value
 
-    let properties entity =
-        match entity.Properties with
-        | Laser prop -> Some(prop)
-        | _ -> None
-
     let create position =
         {
             Location = { Position = position;
                          Bounds = bounds; }
-            Properties = { LeftForce = false; RightForce = false} |> Laser
+            Properties = { LeftForce = false; RightForce = false}
         }
 
     // These push functions are gross, but until the laser functions take a
     // laser and not an entity, I'm not sure I have something better
     let pushLaser laser forceUpdater =
         laser
-        |> Option.map (fun laser ->
-                        match laser.Properties with
-                        | Laser prop -> { laser with Properties = forceUpdater prop |> Laser  }
-                        | _ -> laser)
+        |> Option.map (fun laser -> { laser with LaserEntity.Properties = forceUpdater laser.Properties })
 
     let pushLaserLeft laser =
         pushLaser laser (fun e -> {e with LeftForce = true })
@@ -268,16 +276,11 @@ module Laser =
         pushLaser laser (fun e -> {e with LeftForce = false })
 
     let laserDirection laser =
-        let someDirection = properties laser
-                            |> Option.map (function
-                                          | { RightForce = true; LeftForce = true } -> 0.
-                                          | { LeftForce = true; } -> -1.
-                                          | { RightForce = true } -> 1.
-                                          | _ -> 0.)
-
-        match someDirection with
-        | Some direction -> direction
-        | None -> 0.
+        match laser.Properties with
+        | { RightForce = true; LeftForce = true } -> 0.
+        | { LeftForce = true; } -> -1.
+        | { RightForce = true } -> 1.
+        | _ -> 0.
 
     let calculateLaserMove delta direction =
         direction * speedPerMillisecond * delta
@@ -325,7 +328,7 @@ module Bullet =
         { bullet with Location = location }
 
 type Game = {
-    Laser: Entity option;
+    Laser: Laser.LaserEntity option;
     Bullet: Entity option;
     LastUpdate: Delta;
     Invasion: Invasion;

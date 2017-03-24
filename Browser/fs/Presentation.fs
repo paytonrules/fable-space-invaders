@@ -16,8 +16,9 @@ let presenter (renderer:(list<Image<'HTMLImage>> -> unit)) (imageLookup:(EntityP
                                      |> positionImage <| entity )
 
     let laserImage = game.Laser |> Option.map (fun laser ->
-                                                imageLookup laser.Properties
-                                                |> positionImage <| laser)
+                                                let laserAsEntity = Laser.toEntity laser
+                                                imageLookup laserAsEntity.Properties
+                                                |> positionImage <| laserAsEntity)
 
     let bulletImage = game.Bullet |> Option.map (fun bullet ->
                                                   imageLookup bullet.Properties
