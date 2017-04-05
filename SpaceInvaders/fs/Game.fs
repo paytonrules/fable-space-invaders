@@ -94,17 +94,16 @@ module Vector2 =
         { X = vector.X * scale; Y = vector.Y * scale }
 
 module Entity =
-    let updatePosition entity position =
-        let location = { entity.Location with Position = position}
-        { entity with Location = location }
+    let updatePosition location position =
+        { location with Position = position}
 
     let updateBounds entity bounds =
         let location = { entity.Location with Bounds = bounds}
         { entity with Location = location }
 
-    let updateXPos entity x =
-        let position = { X = x; Y = entity.Location.Position.Y }
-        updatePosition entity position
+    let updateXPos location x =
+        let position = { X = x; Y = location.Position.Y }
+        updatePosition location position
 
     let bottom entity = (float entity.Location.Bounds.Height + entity.Location.Position.Y)
 
@@ -212,6 +211,14 @@ module Invader =
 
     let toggleState = function | Closed -> Open | Open -> Closed
 
+    let updatePosition invader position =
+        { invader with
+            Location = Entity.updatePosition invader.Location position }
+
+    let updateXPos invader x =
+        { invader with
+            Entity.Location = Entity.updateXPos invader.Location x }
+
     let update (invader, invaderProps) invasion delta =
         match Invasion.isTimeToMove invasion delta with
         | true ->
@@ -234,12 +241,9 @@ module Laser =
         { Entity.Location = laser.Location
           Properties = laser.Properties |> Laser }
 
-    let fromEntity (entity:Entity) =
-        match entity.Properties with
-        | Laser props ->
-            { LaserEntity.Location = entity.Location
-              Properties = props }
-        | _ -> failwith "converting non-laser entity to entity"
+    let updateXPos laser x =
+        { laser with
+           LaserEntity.Location = Entity.updateXPos laser.Location x }
 
     let updateProperties laser properties =
         { laser with LaserEntity.Properties = properties }

@@ -217,7 +217,7 @@ module InvasionBounds =
                          Bounds = { Width = 5; Height = 0 } }
             Properties = properties
         }
-        let invaderTwo = Entity.updatePosition invaderOne { X = 10.; Y = 0. }
+        let invaderTwo = Invader.updatePosition invaderOne { X = 10.; Y = 0. }
         let bounds = Invasion.bounds [invaderOne; invaderTwo]
 
         equal bounds.Right 15.
@@ -248,7 +248,7 @@ module InvasionBounds =
                          Bounds = { Width = 5; Height = 0 } }
             Properties = properties
         }
-        let invaderTwo = Entity.updatePosition invaderOne { X = 10.; Y = 0. }
+        let invaderTwo = Invader.updatePosition invaderOne { X = 10.; Y = 0. }
         let bounds = Invasion.bounds [invaderTwo; invaderOne]
 
         equal bounds.Left 5.
@@ -266,8 +266,8 @@ module InvaderBulletCollision =
 
     [<Test>]
     let ``invaders are unchanged when there the bullet doesn't collide`` () =
-        let invader = Entity.updatePosition defaultInvader { X = 0.; Y = 0. }
-        let bullet = Entity.updatePosition defaultBullet { X = 90.; Y = 0. }
+        let invader = Invader.updatePosition defaultInvader { X = 0.; Y = 0. }
+        let bullet = Invader.updatePosition defaultBullet { X = 90.; Y = 0. }
 
         let invaders = [invader]
 
@@ -277,8 +277,8 @@ module InvaderBulletCollision =
 
     [<Test>]
     let ``one invader is removed when the bullet intersects it`` () =
-        let invader = Entity.updatePosition defaultInvader { X = 0.; Y = 0. }
-        let bullet = Entity.updatePosition defaultBullet { X = 1.; Y = 0. }
+        let invader = Invader.updatePosition defaultInvader { X = 0.; Y = 0. }
+        let bullet = Invader.updatePosition defaultBullet { X = 1.; Y = 0. }
 
         let invaders = [invader]
 
@@ -409,10 +409,7 @@ module UpdatingLaser =
     [<Test>]
     let ``stop the laser at the left constraint`` () =
         let laserProperties =  { LeftForce = true; RightForce = false }
-        let leftLaser = Entity.updateXPos
-                        <| Laser.toEntity laser
-                        <| (float Constraints.Bounds.Left)
-                        |> Laser.fromEntity
+        let leftLaser = Laser.updateXPos laser (float Constraints.Bounds.Left)
                         |> Laser.updateProperties
                         <| laserProperties
 
@@ -425,10 +422,7 @@ module UpdatingLaser =
         let laserProperties = { LeftForce = false; RightForce = true }
         let rightEdge = Constraints.Bounds.Right - laser.Location.Bounds.Width
                         |> float
-        let laserAtRightBorder = Entity.updateXPos
-                                 <| Laser.toEntity laser
-                                 <| rightEdge
-                                 |> Laser.fromEntity
+        let laserAtRightBorder = Laser.updateXPos laser rightEdge
                                  |> Laser.updateProperties
                                  <| laserProperties
 
@@ -577,7 +571,7 @@ module InvasionDirection =
     let ``the invasion starts moving down when it hits the right edge and is moving right`` () =
         let positionBeforeRightEdge = float Constraints.Bounds.Right -
                                         Invasion.Direction.Right.X - float invaderWidth
-        let invader = Entity.updateXPos defaultInvader positionBeforeRightEdge
+        let invader = Invader.updateXPos defaultInvader positionBeforeRightEdge
 
         let game = createGameWithInvasion [invader] Invasion.Direction.Right
                    |> Game.updateGame <| timeToMove
@@ -587,7 +581,7 @@ module InvasionDirection =
     [<Test>]
     let ``the invasion starts moving down when it moves beyond the right edge and is moving right`` () =
         let positionBeyondRightEdge = float Constraints.Bounds.Right
-        let invader = Entity.updateXPos defaultInvader positionBeyondRightEdge
+        let invader = Invader.updateXPos defaultInvader positionBeyondRightEdge
 
         let game = createGameWithInvasion [invader] Invasion.Direction.Right
                    |> Game.updateGame <| timeToMove
@@ -597,7 +591,7 @@ module InvasionDirection =
     [<Test>]
     let ``the invasion starts moving left when it is beyond the right edge and is moving down`` () =
         let positionBeyondRightEdge = float Constraints.Bounds.Right
-        let invader = Entity.updateXPos defaultInvader positionBeyondRightEdge
+        let invader = Invader.updateXPos defaultInvader positionBeyondRightEdge
 
         let game = createGameWithInvasion [invader] Invasion.Direction.Down
                    |> Game.updateGame <| timeToMove
@@ -608,7 +602,7 @@ module InvasionDirection =
     let ``the invasion moves down when it is at the left edge and is moving left`` () =
         let oneMoveUntilYouHitLeftBorder = float Constraints.Bounds.Left
                                             - Invasion.Direction.Left.X
-        let invader = Entity.updateXPos defaultInvader oneMoveUntilYouHitLeftBorder
+        let invader = Invader.updateXPos defaultInvader oneMoveUntilYouHitLeftBorder
 
         let game = createGameWithInvasion [invader] Invasion.Direction.Left
                    |> Game.updateGame <| timeToMove
@@ -618,7 +612,7 @@ module InvasionDirection =
     [<Test>]
     let ``the invasion moves down when it beyond the left edge and is moving left`` () =
         let onNextMoveBeyondLeftBorder = float Constraints.Bounds.Left
-        let invader = Entity.updateXPos defaultInvader onNextMoveBeyondLeftBorder
+        let invader = Invader.updateXPos defaultInvader onNextMoveBeyondLeftBorder
 
         let game = createGameWithInvasion [invader] Invasion.Direction.Left
                    |> Game.updateGame <| timeToMove
@@ -628,7 +622,7 @@ module InvasionDirection =
     [<Test>]
     let ``the invasion moves right when it beyond the left edge and is moving down`` () =
         let onNextMoveBeyondLeftBorder = float Constraints.Bounds.Left
-        let invader = Entity.updateXPos defaultInvader onNextMoveBeyondLeftBorder
+        let invader = Invader.updateXPos defaultInvader onNextMoveBeyondLeftBorder
 
         let game = createGameWithInvasion [invader] Invasion.Direction.Down
                    |> Game.updateGame <| timeToMove
@@ -638,7 +632,7 @@ module InvasionDirection =
     [<Test>]
     let ``the direction does not change when it is not yet time to move`` () =
         let onNextMoveBeyondLeftBorder = float Constraints.Bounds.Left
-        let invader = Entity.updateXPos defaultInvader onNextMoveBeyondLeftBorder
+        let invader = Invader.updateXPos defaultInvader onNextMoveBeyondLeftBorder
 
         let game = createGameWithInvasion [invader] Invasion.Direction.Down
                    |> Game.updateGame <| timeToMove - 1.
