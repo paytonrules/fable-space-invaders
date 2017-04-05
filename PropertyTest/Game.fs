@@ -7,15 +7,11 @@ open System
 
 [<Property>]
 let ``the number of invaders is always the same or lower after update`` (game : Game, delta : Delta) =
-    let invaderCount = game.Entities
-                       |> Invasion.invadersFrom
-                       |> List.length
+    let invaderCount = game.Invasion.Invaders |> List.length
 
     let newGame = Game.update game (Update delta)
 
-    let updatedInvaderCount = newGame.Entities
-                              |> Invasion.invadersFrom
-                              |> List.length
+    let updatedInvaderCount = game.Invasion.Invaders |> List.length
 
     updatedInvaderCount <= invaderCount
 

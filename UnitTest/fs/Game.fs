@@ -487,22 +487,22 @@ module UpdateBullet =
     [<Test>]
     let ``a bullet goes up the velocity each update`` () =
         let position = { X = 10.; Y = 10. }
-        let properties = { Velocity = { X = 1.; Y = 1.}} |> Bullet
-        let bullet = Bullet.create position properties
+        let properties = { Velocity = { X = 1.; Y = 1.}}
+        let bullet = Bullet.create position (Bullet properties)
         let delta = 1.
 
-        let updatedBullet = Bullet.update bullet delta
+        let updatedBullet = Bullet.update (bullet, properties) delta
 
         equal { X = 11.; Y = 11. } updatedBullet.Location.Position
 
     [<Test>]
     let ``the going up accounts for the delta`` () =
         let position = { X = 10.; Y = 10. }
-        let properties = { Velocity = { X = 1.; Y = 1.}} |> Bullet
-        let bullet = Bullet.create position properties
+        let properties = { Velocity = { X = 1.; Y = 1.}}
+        let bullet = Bullet.create position (Bullet properties)
         let delta = 0.5
 
-        let updatedBullet = Bullet.update bullet delta
+        let updatedBullet = Bullet.update (bullet, properties) delta
 
         equal { X = 10.5; Y = 10.5 } updatedBullet.Location.Position
 

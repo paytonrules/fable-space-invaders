@@ -309,20 +309,17 @@ module Bullet =
     let DefaultVelocity = { X = 0.; Y = -0.1 }
 
     let create position bulletProperties =
-        { Properties = bulletProperties;
-          Location = { Position = position;
-                       Bounds = { Width = 0; Height = 0 }}} // How is this working?
+        { Properties = bulletProperties
+          Location = { Position = position
+                       Bounds = { Width = 0; Height = 0 } } }
 
     let createWithDefaultProperties position =
         create position (Bullet { Velocity = DefaultVelocity })
 
-    let update bullet delta =
-        let position = match bullet.Properties with
-                       | Bullet properties ->
-                          properties.Velocity
-                          |> Vector2.scale <| delta
-                          |> Vector2.add bullet.Location.Position
-                       | _ -> bullet.Location. Position
+    let update (bullet, properties) delta =
+        let position = properties.Velocity
+                       |> Vector2.scale <| delta
+                       |> Vector2.add bullet.Location.Position
 
         let location = { bullet.Location with Position = position }
         { bullet with Location = location }
@@ -386,14 +383,20 @@ module Game =
 
         let invasion = { game.Invasion with Invaders = movedInvaders }
         let newLaser = game.Laser |> Option.map (fun laser -> Laser.update laser delta)
-        let newBullet = game.Bullet |> Option.map (fun bullet -> Bullet.update bullet delta )
+        let newBullet = game.Bullet
+                        |> Option.map
+                          (fun bullet ->
+                            match bullet.Properties with
+                            | Bullet props ->
+                                Bullet.update (bullet, props) delta
+                            | _ -> bullet)
 
         { game with Laser = newLaser;
                     Invasion = invasion;
                     Bullet = newBullet }
 
-    let isPastTheTopOfTheScreen entity =
-        entity.Location.Position.Y + (float entity.Location.Bounds.Height) < (float Constraints.Bounds.Top)
+    let isPastTheTopOfTheScreen bullet =
+        bullet.Location.Position.Y + (float bullet.Location.Bounds.Height) < (float Constraints.Bounds.Top)
 
     let removeOffscreenBullet = function
       | Some bullet when isPastTheTopOfTheScreen bullet -> None
