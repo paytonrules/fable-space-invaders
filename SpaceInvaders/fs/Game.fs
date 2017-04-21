@@ -93,27 +93,26 @@ module Vector2 =
     let scale vector scale =
         { X = vector.X * scale; Y = vector.Y * scale }
 
-module Entity =
-    let updatePosition location position =
-        { location with Position = position}
+module Box =
+    let updatePosition box position =
+        { box with Position = position}
 
-    let updateBounds entity bounds =
-        let location = { entity.Location with Bounds = bounds}
-        { entity with Location = location }
+    let updateBounds box bounds =
+        { box with Bounds = bounds}
 
-    let updateXPos location x =
-        let position = { X = x; Y = location.Position.Y }
-        updatePosition location position
+    let updateXPos box x =
+        let position = { X = x; Y = box.Position.Y }
+        updatePosition box position
 
-    let bottom entity = (float entity.Location.Bounds.Height + entity.Location.Position.Y)
+    let bottom box = (float box.Bounds.Height + box.Position.Y)
 
-    let right entity = (float entity.Location.Bounds.Width + entity.Location.Position.X)
+    let right box = (float box.Bounds.Width + box.Position.X)
 
-    let isOverlapping (entityOne:Entity) entityTwo =
-        not (entityTwo.Location.Position.X > right entityOne
-              || right entityTwo < entityOne.Location.Position.X
-              || entityTwo.Location.Position.Y > bottom entityOne
-              || bottom entityTwo < entityOne.Location.Position.Y)
+    let isOverlapping boxOne boxTwo =
+        not (boxTwo.Position.X > right boxOne
+              || right boxTwo < boxOne.Position.X
+              || boxTwo.Position.Y > bottom boxOne
+              || bottom boxTwo < boxOne.Position.Y)
 
 module Invasion =
     let columnWidth = 16.
@@ -181,9 +180,9 @@ module Invasion =
             | MovingRight -> invasion
         | WithinBounds -> invasion
 
-    let removeShotInvaders invaders bullet =
+    let removeShotInvaders invaders location =
         invaders |> List.filter (fun invader ->
-                                    not <| Entity.isOverlapping invader bullet)
+                                    not <| Box.isOverlapping invader.Location location)
 
     // Keep in mind that the spaceship actually counts as one of the shots
     // Hot damn see this: http://www.computerarcheology.com/Arcade/SpaceInvaders/
@@ -213,11 +212,11 @@ module Invader =
 
     let updatePosition invader position =
         { invader with
-            Location = Entity.updatePosition invader.Location position }
+            Location = Box.updatePosition invader.Location position }
 
     let updateXPos invader x =
         { invader with
-            Entity.Location = Entity.updateXPos invader.Location x }
+            Entity.Location = Box.updateXPos invader.Location x }
 
     let update (invader, invaderProps) invasion delta =
         match Invasion.isTimeToMove invasion delta with
@@ -243,7 +242,7 @@ module Laser =
 
     let updateXPos laser x =
         { laser with
-           LaserEntity.Location = Entity.updateXPos laser.Location x }
+           LaserEntity.Location = Box.updateXPos laser.Location x }
 
     let updateProperties laser properties =
         { laser with LaserEntity.Properties = properties }
@@ -312,16 +311,30 @@ module Bullet =
     let Height = 4
     let DefaultVelocity = { X = 0.; Y = -0.1 }
 
+    type BulletEntity = {
+        Location: Box
+        Properties: BulletProperties
+    }
+
+    let toEntity bullet =
+        { Entity.Location = bullet.Location
+          Properties = bullet.Properties |> Bullet }
+
+
     let create position bulletProperties =
         { Properties = bulletProperties
           Location = { Position = position
                        Bounds = { Width = 0; Height = 0 } } }
 
     let createWithDefaultProperties position =
-        create position (Bullet { Velocity = DefaultVelocity })
+        create position { Velocity = DefaultVelocity }
 
-    let update (bullet, properties) delta =
-        let position = properties.Velocity
+    let updateBounds bullet bounds =
+        { bullet with
+            BulletEntity.Location = Box.updateBounds bullet.Location bounds }
+
+    let update bullet delta =
+        let position = bullet.Properties.Velocity
                        |> Vector2.scale <| delta
                        |> Vector2.add bullet.Location.Position
 
@@ -330,7 +343,7 @@ module Bullet =
 
 type Game = {
     Laser: Laser.LaserEntity option;
-    Bullet: Entity option;
+    Bullet: Bullet.BulletEntity option;
     LastUpdate: Delta;
     Invasion: Invasion;
 }
@@ -387,36 +400,31 @@ module Game =
 
         let invasion = { game.Invasion with Invaders = movedInvaders }
         let newLaser = game.Laser |> Option.map (fun laser -> Laser.update laser delta)
-        let newBullet = game.Bullet
-                        |> Option.map
-                          (fun bullet ->
-                            match bullet.Properties with
-                            | Bullet props ->
-                                Bullet.update (bullet, props) delta
-                            | _ -> bullet)
+        let newBullet = game.Bullet |> Option.map (fun bullet -> Bullet.update bullet delta)
 
         { game with Laser = newLaser;
                     Invasion = invasion;
                     Bullet = newBullet }
 
-    let isPastTheTopOfTheScreen bullet =
+    let isPastTheTopOfTheScreen (bullet:Bullet.BulletEntity) =
         bullet.Location.Position.Y + (float bullet.Location.Bounds.Height) < (float Constraints.Bounds.Top)
 
-    let removeOffscreenBullet = function
-      | Some bullet when isPastTheTopOfTheScreen bullet -> None
-      | Some bullet -> Some bullet
-      | None -> None
+    let removeOffscreenBullet (bullet:Bullet.BulletEntity option) =
+        match bullet with
+        | Some bullet when isPastTheTopOfTheScreen bullet -> None
+        | Some bullet -> Some bullet
+        | None -> None
 
     let changeInvasionDirection invaders invasion delta =
         if Invasion.isTimeToMove invasion delta
         then Invasion.nextInvasionDirection invaders invasion
         else invasion
 
-    let afterCollision bullet invaders =
+    let afterCollision (bullet:Bullet.BulletEntity option) invaders =
         match bullet with
         | None -> (None, invaders)
         | Some bullet ->
-            let invaders' = Invasion.removeShotInvaders invaders bullet
+            let invaders' = Invasion.removeShotInvaders invaders bullet.Location
             if List.length invaders = List.length invaders'
             then (Some bullet, invaders)
             else (None, invaders')

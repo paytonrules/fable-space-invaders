@@ -21,8 +21,9 @@ let presenter (renderer:(list<Image<'HTMLImage>> -> unit)) (imageLookup:(EntityP
                                                 |> positionImage <| laserAsEntity)
 
     let bulletImage = game.Bullet |> Option.map (fun bullet ->
-                                                  imageLookup bullet.Properties
-                                                  |> positionImage <| bullet)
+                                                  let bulletAsEntity = Bullet.toEntity bullet
+                                                  imageLookup bulletAsEntity.Properties
+                                                  |> positionImage <| bulletAsEntity)
 
     let images' = match laserImage with
                   | Some image -> List.append imagesToDraw [image]

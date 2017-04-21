@@ -4,7 +4,7 @@ open SpaceInvaders
 open Fable.Core.Testing
 
 [<TestFixture>]
-module EntityIntersection =
+module BoxIntersection =
     let laser = { RightForce = true; LeftForce = true } |> Laser
 
     let cases = [
@@ -22,21 +22,19 @@ module EntityIntersection =
         ({ X = 0.; Y = 11. }, { X = 0.; Y = 0. }, false);
     ]
     [<Test>]
-    let ``entity intersection (this is a data driven test)`` () =
-        cases |> List.iter (fun (firstBox, secondBox, expects) ->
+    let ``box intersection (this is a data driven test)`` () =
+        cases |> List.iter (fun (firstPosition, secondPosition, expects) ->
             let firstBox = {
-                Location = { Position = firstBox;
-                             Bounds = { Width = 10; Height = 10 } }
-                Properties = laser
+              Position = firstPosition
+              Bounds = { Width = 10; Height = 10 }
             }
 
             let secondBox = {
-                Location = { Position = secondBox;
-                             Bounds = { Width = 10; Height = 10 } }
-                Properties = laser
+              Position = secondPosition
+              Bounds = { Width = 10; Height = 10 }
             }
 
-            Entity.isOverlapping firstBox secondBox |> equal expects)
+            Box.isOverlapping firstBox secondBox |> equal expects)
 
 [<TestFixture>]
 module InitialInvaderPositioning =
@@ -271,7 +269,7 @@ module InvaderBulletCollision =
 
         let invaders = [invader]
 
-        let updatedInvaders = Invasion.removeShotInvaders invaders bullet
+        let updatedInvaders = Invasion.removeShotInvaders invaders bullet.Location
 
         equal updatedInvaders invaders
 
@@ -282,7 +280,7 @@ module InvaderBulletCollision =
 
         let invaders = [invader]
 
-        let updatedInvaders = Invasion.removeShotInvaders invaders bullet
+        let updatedInvaders = Invasion.removeShotInvaders invaders bullet.Location
 
         List.isEmpty updatedInvaders |> equal true
 
@@ -482,10 +480,10 @@ module UpdateBullet =
     let ``a bullet goes up the velocity each update`` () =
         let position = { X = 10.; Y = 10. }
         let properties = { Velocity = { X = 1.; Y = 1.}}
-        let bullet = Bullet.create position (Bullet properties)
+        let bullet = Bullet.create position properties
         let delta = 1.
 
-        let updatedBullet = Bullet.update (bullet, properties) delta
+        let updatedBullet = Bullet.update bullet delta
 
         equal { X = 11.; Y = 11. } updatedBullet.Location.Position
 
@@ -493,10 +491,10 @@ module UpdateBullet =
     let ``the going up accounts for the delta`` () =
         let position = { X = 10.; Y = 10. }
         let properties = { Velocity = { X = 1.; Y = 1.}}
-        let bullet = Bullet.create position (Bullet properties)
+        let bullet = Bullet.create position properties
         let delta = 0.5
 
-        let updatedBullet = Bullet.update (bullet, properties) delta
+        let updatedBullet = Bullet.update bullet delta
 
         equal { X = 10.5; Y = 10.5 } updatedBullet.Location.Position
 
@@ -512,8 +510,8 @@ module BulletInvaderCollision =
                          Bounds = { Width = 10; Height = 10 } }
             Properties = invaderProperties
         }
-        let bulletProps = { Velocity = { X = 0.; Y = 0. } } |> Bullet
-        let bullet = Some {
+        let bulletProps = { Velocity = { X = 0.; Y = 0. } }
+        let bullet:Bullet.BulletEntity option = Some {
             Location = { Position = { X = 100.; Y = 100. }
                          Bounds = { Width = 10; Height = 10 } }
             Properties = bulletProps;
@@ -530,8 +528,8 @@ module BulletInvaderCollision =
                          Bounds = { Width = 10; Height = 10 } }
             Properties = invaderProperties
         }
-        let bulletProps = { Velocity = { X = 0.; Y = 0. } } |> Bullet
-        let bullet = Some {
+        let bulletProps = { Velocity = { X = 0.; Y = 0. } }
+        let bullet:Bullet.BulletEntity option = Some {
             Location = { Position = { X = 1.; Y = 1. }
                          Bounds = { Width = 10; Height = 10 } }
             Properties = bulletProps;
@@ -541,8 +539,8 @@ module BulletInvaderCollision =
 
     [<Test>]
     let ``when the bullet is the only entity it does not remove itself (check only against invaders)`` () =
-        let bulletProps = { Velocity = { X = 0.; Y = 0. } } |> Bullet
-        let bullet = Some {
+        let bulletProps = { Velocity = { X = 0.; Y = 0. } }
+        let bullet:Bullet.BulletEntity option = Some {
             Location = { Position = { X = 1.; Y = 1. }
                          Bounds = { Width = 10; Height = 10 } }
             Properties = bulletProps;
@@ -659,7 +657,7 @@ module MoveEntities =
     [<Test>]
     let ``moves the bullet when moving entities`` () =
         let bullet = Bullet.createWithDefaultProperties { X = 0.; Y = 0. }
-        let properties = { Velocity = { X = 1.0; Y = 1.0 }} |> Bullet
+        let properties = { Velocity = { X = 1.0; Y = 1.0 }}
         let movingBullet = { bullet with Properties = properties}
 
         let game = Game.createGame None []
@@ -739,7 +737,7 @@ module UpdateGame =
         let offTheTop = Constraints.Bounds.Top - bulletBounds.Height - 1
         let position = { X = 0.; Y = float offTheTop }
         let bullet = Bullet.createWithDefaultProperties position
-                     |> Entity.updateBounds <| bulletBounds
+                     |> Bullet.updateBounds <| bulletBounds
 
         let game = Game.createGame None []
                    |> Game.setBullet <| bullet
@@ -753,7 +751,7 @@ module UpdateGame =
         let offTheTop = Constraints.Bounds.Top - bulletBounds.Height + 1
         let position = { X = 0.; Y = float offTheTop }
         let bullet = Bullet.createWithDefaultProperties position
-                     |> Entity.updateBounds <| bulletBounds
+                     |> Bullet.updateBounds <| bulletBounds
 
         let game = Game.createGame None []
                    |> Game.setBullet <| bullet
