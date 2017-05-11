@@ -58,12 +58,6 @@ type Entity  =  {
 
 type Entities = Entity list
 
-type Invasion = {
-    Invaders: Entities;
-    TimeToMove: Delta;
-    SinceLastMove: Delta;
-    Direction: Vector2;
-}
 type Event =
 | MoveLeft
 | MoveRight
@@ -114,6 +108,48 @@ module Box =
               || boxTwo.Position.Y > bottom boxOne
               || bottom boxTwo < boxOne.Position.Y)
 
+
+module Invader =
+    type InvaderEntity = {
+        Location: Box;
+        Properties: InvaderProperties;
+    }
+
+    let toEntity invader = {
+        Entity.Location = invader.Location
+        Properties = invader.Properties |> Invader
+    }
+
+    let bounds = function
+    | Small -> { Width = 8; Height = 8 }
+    | Medium -> { Width = 11; Height = 8 }
+    | Large -> { Width = 12; Height = 8 }
+
+    let create (position, invaderType) =
+        { Location = { Position = position;
+                       Bounds = bounds invaderType;}
+          Properties = { InvaderState = Closed;
+                         Type = invaderType } };
+
+    let toggleState = function | Closed -> Open | Open -> Closed
+
+    let updatePosition invader position =
+        { invader with
+            InvaderEntity.Location = Box.updatePosition invader.Location position }
+
+    let updateInvaderState invader state =
+        let invaderProps = { invader.Properties with InvaderState = state }
+        { invader with Properties = invaderProps }
+
+    let updateXPos invader x =
+        { invader with
+            InvaderEntity.Location = Box.updateXPos invader.Location x }
+
+    let move direction invader =
+      let newPosition = Vector2.add invader.Location.Position direction
+      updatePosition invader newPosition
+      |> updateInvaderState <| toggleState invader.Properties.InvaderState
+
 module Invasion =
     let columnWidth = 16.
     let rowHeight = 16.
@@ -121,6 +157,14 @@ module Invasion =
     let rows = 6
     let totalInvaders = columns * rows
     let initialTimeToMove = 1000.
+
+    type Invaders = Invader.InvaderEntity list
+    type Invasion = {
+        Invaders: Invaders
+        TimeToMove: Delta
+        SinceLastMove: Delta
+        Direction: Vector2
+    }
 
     module Direction =
         let Right = { X = 4.; Y = 0.}
@@ -133,20 +177,23 @@ module Invasion =
           SinceLastMove = 0.;
           Direction = Direction.Right }
 
-    let rightBounds invaders =
+    let rightBounds (invaders:Invaders) =
         invaders
         |> List.map (fun entity -> entity.Location.Position.X + float entity.Location.Bounds.Width)
         |> List.max
 
-    let leftBounds invaders =
+    let leftBounds (invaders:Invaders) =
         invaders
         |> List.map (fun entity -> entity.Location.Position.X)
         |> List.min
 
-    let bounds invaders =
+    let bounds (invaders:Invaders) =
         if invaders |> List.isEmpty
         then { Right = 0.; Left = 0. }
         else { Right = rightBounds invaders; Left = leftBounds invaders }
+
+    let updateSinceLastMove invasion delta =
+        { invasion with SinceLastMove = delta }
 
     let isTimeToMove invasion delta =
         delta + invasion.SinceLastMove >= invasion.TimeToMove
@@ -158,7 +205,7 @@ module Invasion =
         then MovingLeft
         else MovingDown
 
-    let (|PastRightEdge|PastLeftEdge|WithinBounds|) entities =
+    let (|PastRightEdge|PastLeftEdge|WithinBounds|) (entities:Invaders) =
         let bounds = bounds entities
         if bounds.Right >= float Constraints.Bounds.Right
         then PastRightEdge
@@ -166,7 +213,7 @@ module Invasion =
         then PastLeftEdge
         else WithinBounds
 
-    let nextInvasionDirection invaders invasion =
+    let nextInvasionDirection (invaders:Invaders) invasion =
         match invaders with
         | PastRightEdge ->
             match invasion.Direction with
@@ -180,52 +227,27 @@ module Invasion =
             | MovingRight -> invasion
         | WithinBounds -> invasion
 
-    let removeShotInvaders invaders location =
+    let removeShotInvaders (invaders:Invaders) location =
         invaders |> List.filter (fun invader ->
                                     not <| Box.isOverlapping invader.Location location)
+
+    let update invasion delta =
+        match isTimeToMove invasion delta with
+        | true ->
+            let move = Invader.move invasion.Direction
+            { invasion with Invaders = List.map move invasion.Invaders }
+        | false -> invasion
 
     // Keep in mind that the spaceship actually counts as one of the shots
     // Hot damn see this: http://www.computerarcheology.com/Arcade/SpaceInvaders/
     //
-    type ShouldFireMissile = Entities -> Invasion -> Delta -> bool
+//    type ShouldFireMissile = Entities -> Invasion -> Delta -> bool
 
-module Missile =
-    type MissileSpeedFunc = Entities -> Speed
-    type NewMissileLocation = MissileProperties -> Entities
-    type UpdateMissile = MissileSpeedFunc -> Entity -> Position
+//module Missile =
+//    type MissileSpeedFunc = Entities -> Speed
+//    type NewMissileLocation = MissileProperties -> Entities
+//    type UpdateMissile = MissileSpeedFunc -> Entity -> Position
 
-
-module Invader =
-
-    let bounds = function
-    | Small -> { Width = 8; Height = 8 }
-    | Medium -> { Width = 11; Height = 8 }
-    | Large -> { Width = 12; Height = 8 }
-
-    let create (position, invaderType) =
-        { Location = { Position= position;
-                       Bounds = bounds invaderType;}
-          Properties = { InvaderState = Closed;
-                        Type = invaderType} |> Invader};
-
-    let toggleState = function | Closed -> Open | Open -> Closed
-
-    let updatePosition invader position =
-        { invader with
-            Location = Box.updatePosition invader.Location position }
-
-    let updateXPos invader x =
-        { invader with
-            Entity.Location = Box.updateXPos invader.Location x }
-
-    let update (invader, invaderProps) invasion delta =
-        match Invasion.isTimeToMove invasion delta with
-        | true ->
-          let newPosition = Vector2.add invader.Location.Position invasion.Direction
-          let location = { invader.Location with Position = newPosition }
-          let invaderProps = { invaderProps with InvaderState = toggleState invaderProps.InvaderState } |> Invader
-          { invader with Location = location; Properties = invaderProps }
-        | false -> invader
 
 module Laser =
     type LaserEntity = {
@@ -333,6 +355,11 @@ module Bullet =
         { bullet with
             BulletEntity.Location = Box.updateBounds bullet.Location bounds }
 
+    let updatePosition bullet position =
+        { bullet with
+            BulletEntity.Location = Box.updatePosition bullet.Location position }
+
+
     let update bullet delta =
         let position = bullet.Properties.Velocity
                        |> Vector2.scale <| delta
@@ -345,7 +372,7 @@ type Game = {
     Laser: Laser.LaserEntity option;
     Bullet: Bullet.BulletEntity option;
     LastUpdate: Delta;
-    Invasion: Invasion;
+    Invasion: Invasion.Invasion;
 }
 
 module Game =
@@ -392,19 +419,9 @@ module Game =
         { game with Invasion = invasion }
 
     let moveEntities game delta =
-        let movedInvaders = game.Invasion.Invaders
-                            |> List.map (fun entity ->
-                                          match entity.Properties with
-                                          | Invader props -> Invader.update (entity, props) game.Invasion delta
-                                          | _ -> failwith "Invalid invader!")
-
-        let invasion = { game.Invasion with Invaders = movedInvaders }
-        let newLaser = game.Laser |> Option.map (fun laser -> Laser.update laser delta)
-        let newBullet = game.Bullet |> Option.map (fun bullet -> Bullet.update bullet delta)
-
-        { game with Laser = newLaser;
-                    Invasion = invasion;
-                    Bullet = newBullet }
+        { game with Laser = game.Laser |> Option.map (fun laser -> Laser.update laser delta)
+                    Invasion = Invasion.update game.Invasion delta
+                    Bullet = game.Bullet |> Option.map (fun bullet -> Bullet.update bullet delta) }
 
     let isPastTheTopOfTheScreen (bullet:Bullet.BulletEntity) =
         bullet.Location.Position.Y + (float bullet.Location.Bounds.Height) < (float Constraints.Bounds.Top)
@@ -415,7 +432,7 @@ module Game =
         | Some bullet -> Some bullet
         | None -> None
 
-    let changeInvasionDirection invaders invasion delta =
+    let changeInvasionDirection (invaders:Invasion.Invaders) invasion delta =
         if Invasion.isTimeToMove invasion delta
         then Invasion.nextInvasionDirection invaders invasion
         else invasion
@@ -429,7 +446,7 @@ module Game =
             then (Some bullet, invaders)
             else (None, invaders')
 
-    let updateTimeSinceLastMove invasion delta =
+    let updateTimeSinceLastMove (invasion:Invasion.Invasion) delta =
       match invasion.SinceLastMove + delta with
       | sinceLastMove when sinceLastMove < invasion.TimeToMove ->
           { invasion with SinceLastMove = sinceLastMove }

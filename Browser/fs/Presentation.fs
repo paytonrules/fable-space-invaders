@@ -11,9 +11,10 @@ let presenter (renderer:(list<Image<'HTMLImage>> -> unit)) (imageLookup:(EntityP
                      Y = entity.Location.Position.Y}}
 
     let imagesToDraw = game.Invasion.Invaders
-                       |> List.map (fun entity ->
-                                     imageLookup entity.Properties
-                                     |> positionImage <| entity )
+                       |> List.map (fun invader ->
+                                     let invaderAsEntity = Invader.toEntity invader
+                                     imageLookup invaderAsEntity.Properties
+                                     |> positionImage <| invaderAsEntity )
 
     let laserImage = game.Laser |> Option.map (fun laser ->
                                                 let laserAsEntity = Laser.toEntity laser
